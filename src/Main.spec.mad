@@ -1,7 +1,7 @@
 import { assertEquals, test } from "TestTools"
-import { Right } from "Either"
+import { Left, Right } from "Either"
 
-import { anyChar, oneOf, runParser } from "./Main"
+import { anyChar, choice, oneOf, runParser, location, Location, Loc } from "./Main"
 
 test("it should parse any character", (_) => {
   input = "c"
@@ -17,6 +17,33 @@ test("it should parse specific characters", (_) => {
   abcParser = oneOf(["a", "b", "c"])
   parser = pipe(
     map((a, b, c) => a ++ b ++ c),
+    ap($, abcParser),
+    ap($, abcParser)
+  )(abcParser)
+  actual = runParser(parser, input)
+
+  return assertEquals(actual, expected)
+})
+
+
+type Letter = L Location Location String
+
+test("location combinator should give access to current location info", (_) => {
+  input = "cba"
+  expected = Right([
+    L(Loc(0, 0, 0), Loc(1, 0, 1), "c"),
+    L(Loc(1, 0, 1), Loc(2, 0, 2), "b"),
+    L(Loc(2, 0, 2), Loc(3, 0, 3), "a")
+  ])
+
+  abcParser = pipe(
+    map((start, c, end) => L(start, end, c)),
+    ap($, oneOf(["a", "b", "c"])),
+    ap($, location)
+  )(location)
+
+  parser = pipe(
+    map((a, b, c) => [a, b, c]),
     ap($, abcParser),
     ap($, abcParser)
   )(abcParser)

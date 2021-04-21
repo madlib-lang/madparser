@@ -10,27 +10,33 @@ import {} from "Number"
 
 import IO from "IO"
 
+export type Location = Loc Number Number Number
 
-export type Parser a = Parser (String -> List <a, String>)
+incLoc :: String -> Location -> Location
+incLoc = (c) => where is Loc abs line col: c == "\n"
+  ? Loc(abs + 1, line + 1, 0)
+  : Loc(abs + 1, line, col + 1)
+
+export type Parser a = Parser (String -> Location -> List <a, String, Location>)
 
 
 instance Functor Parser {
-  map = (f, m) => Parser((s) =>
+  map = (f, m) => Parser((s, l) =>
     map(
-      where is <a, b>: <f(a), b>,
-      parse(m, s)
+      where is <a, b, loc>: <f(a), b, loc>,
+      parse(m, s, l)
     )
   )
 }
 
 instance Applicative Parser {
-  pure = (a) => Parser((s) => [<a, s>])
+  pure = (a) => Parser((s, l) => [<a, s, l>])
 
-  ap = (parserA, parserB) => Parser((s) =>
-    where(parse(parserA, s)) {
-      is [<f, s1>]  : where(parse(parserB, s1)) {
-        is [<a, s2>]: [<f(a), s2>]
-        is _        : []
+  ap = (parserA, parserB) => Parser((s, l) =>
+    where(parse(parserA, s, l)) {
+      is [<f, s1, l1>]: where(parse(parserB, s1, l1)) {
+        is [<a, s2, l2>]: [<f(a), s2, l2>]
+        is _            : []
       }
       is _: []
     }
@@ -40,43 +46,46 @@ instance Applicative Parser {
 instance Monad Parser {
   of = pure
 
-  chain = (f, m) => Parser((s) =>
-    where(parse(m, s))
-      is []       : []
-      is [<a, s1>]: parse(f(a), s1)
+  chain = (f, m) => Parser((s, l) =>
+    where(parse(m, s, l))
+      is []           : []
+      is [<a, s1, l1>]: parse(f(a), s1, l1)
   )
 }
 
 instance Alternative Parser {
-  empty = Parser((_) => [])
+  empty = Parser((_, __) => [])
 
-  alt = (ma, mb) => Parser((s) =>
-    where(parse(ma, s))
-      is [] : parse(mb, s)
+  alt = (ma, mb) => Parser((s, l) =>
+    where(parse(ma, s, l))
+      is [] : parse(mb, s, l)
       is res: res
   )
 }
 
-parse :: Parser a -> String -> List <a, String>
-parse = (parser, input) => {
+parse :: Parser a -> String -> Location -> List <a, String, Location>
+parse = (parser, input, loc) => {
   parseFn = where(parser)
     is Parser fn: fn
-  return parseFn(input)
+  return parseFn(input, loc)
 }
 
 runParser :: Parser a -> String -> Either String a
-export runParser = (m, s) => where(parse(m, s))
-  is [<res, "">]: Right(res)
-  is [<_, rest>]: Left(IO.log(rest) |> (_) => "Err")
-  is e          : Left(IO.log(e) |> (_) => "Err")
+export runParser = (m, s) => where(parse(m, s, Loc(0, 0, 0)))
+  is [<res, "", _>]: Right(res)
+  is [<_, rest, l>]: Left(IO.log(l) |> (_) => "Err")
+  is e             : Left(IO.log(e) |> (_) => "Err")
 
 anyChar :: Parser String
-export anyChar = Parser((s) => pipe(
+export anyChar = Parser((s, l) => pipe(
   firstChar,
   where
-    is Just c : [<c, drop(1, s)>]
+    is Just c : [<c, drop(1, s), incLoc(c, l)>]
     is Nothing: []
 )(s))
+
+location :: Parser Location
+export location = Parser((s, l) => [<l, s, l>])
 
 oneOf :: List String -> Parser String
 export oneOf = (cs) => satisfy(includes($, cs))
@@ -107,17 +116,17 @@ export manyTill = (p, end) => pipe(
 )(end)
 
 lookAhead :: Parser a -> Parser a
-export lookAhead = (p) => Parser((s) => where(parse(p, s))
-  is [<a, _>]: [<a, s>]
-  is _       : []
+export lookAhead = (p) => Parser((s, l) => where(parse(p, s, l))
+  is [<a, _, _>]: [<a, s, l>]
+  is _          : []
 )
 
 takeWhile :: (String -> Boolean) -> Parser String
 export takeWhile = (pred) => {
-  parser = Parser((s) => where(parse(anyChar, s))
-    is []         : [<"", s>]
-    is [<"", _>]  : [<"", s>]
-    is [<c, rest>]: pred(c) ? [<c, rest>] : [<"", s>]
+  parser = Parser((s, l) => where(parse(anyChar, s, l))
+    is []             : [<"", s, l>]
+    is [<"", _, _>]   : [<"", s, l>]
+    is [<c, rest, ll>]: pred(c) ? [<c, rest, ll>] : [<"", s, l>]
   )
 
   return chain(
@@ -140,8 +149,8 @@ char :: String -> Parser String
 export char = pipe(equals, satisfy)
 
 eof :: Parser ()
-export eof = Parser((s) => where(parse(anyChar, s))
-  is []: [<(), "">]
+export eof = Parser((s, l) => where(parse(anyChar, s, l))
+  is []: [<(), "", l>]
   is _ : []
 )
 
