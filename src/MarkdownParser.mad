@@ -1,0 +1,235 @@
+import P from "./Main"
+import { dropWhile, filter, reduce } from "List"
+import { always, equals, identity } from "Function"
+import { Just, Nothing } from "Maybe"
+import { mapL } from "Functor"
+import { apL } from "Applicative"
+import IO from "IO"
+
+
+type ContentPart
+  = Text String
+  | Bold String
+  | Italic String
+  | InlineCode String
+  | Link String String
+  | LineReturn
+
+alias Content = List ContentPart
+
+type Block
+  = H1 Content
+  | H2 Content
+  | H3 Content
+  | H4 Content
+  | H5 Content
+  | H6 Content
+  | Paragraph Content
+  | Blockquote Content
+  | Code String String
+
+alias MarkDown = List Block
+
+
+between :: P.Parser a -> P.Parser b -> P.Parser c -> P.Parser b
+between = (start, mid, end) => pipe(
+  mapL(identity),
+  ap($, mid),
+  apL($, end)
+)(start)
+
+contentCharacter :: P.Parser String
+contentCharacter = P.choice([
+  P.letter,
+  P.char("!"),
+  P.char("?"),
+  P.char(" ")
+])
+
+linkCharacter :: P.Parser String
+linkCharacter = P.choice([
+  P.letter,
+  P.char("/"),
+  P.char(":"),
+  P.char("?"),
+  P.char("."),
+  P.char("-"),
+  P.char("_"),
+  P.char("#")
+])
+
+text :: P.Parser ContentPart
+text = pipe(
+  P.some,
+  map(pipe(reduce(mappend, ""), Text))
+)(contentCharacter)
+
+bold :: P.Parser ContentPart
+bold = pipe(
+  mapL(Bold),
+  ap($, pipe(P.some, map(reduce(mappend, "")))(contentCharacter)),
+  apL($, P.string("**"))
+)(P.string("**"))
+
+italic :: P.Parser ContentPart
+italic = pipe(
+  mapL(Italic),
+  ap($, pipe(P.some, map(reduce(mappend, "")))(contentCharacter)),
+  apL($, P.string("*"))
+)(P.string("*"))
+
+inlineCode :: P.Parser ContentPart
+inlineCode = pipe(
+  mapL(InlineCode),
+  ap($, pipe(P.many, map(reduce(mappend, "")))(contentCharacter)),
+  apL($, P.string("`"))
+)(P.string("`"))
+
+link :: P.Parser ContentPart
+link = pipe(
+  map(Link),
+  ap($, between(
+    P.string("("),
+    pipe(P.many, map(reduce(mappend, "")))(contentCharacter),
+    P.string(")")
+  ))
+)(between(
+  P.string("["),
+  pipe(P.many, map(reduce(mappend, "")))(linkCharacter),
+  P.string("]")
+))
+
+lineReturn :: P.Parser ContentPart
+lineReturn = map(always(LineReturn), P.char("\n"))
+
+content :: P.Parser Content
+content = pipe(
+  P.choice,
+  P.many
+)([bold, italic, inlineCode, text, link])
+
+
+lineReturnExceptBefore :: P.Parser a -> P.Parser ContentPart
+lineReturnExceptBefore = (before) => pipe(
+  mapL(identity),
+  ap($, alt(map(always(Just(())), before), pure(Nothing))),
+  P.lookAhead,
+  chain(where
+    is Just _ : empty
+    is Nothing: lineReturn
+  )
+)(lineReturn)
+
+contentWithLineReturn :: P.Parser a -> P.Parser Content
+contentWithLineReturn = (delimiter) => pipe(
+  P.choice,
+  P.some,
+  map(dropWhile(equals(LineReturn)))
+)([bold, italic, inlineCode, text, link, lineReturnExceptBefore(delimiter)])
+
+heading :: (Content -> Block) -> String -> P.Parser Block
+heading = (constructor) => pipe(
+  P.symbol,
+  mapL(constructor),
+  ap($, content),
+  apL($, singleReturnTerminal)
+)
+
+singleReturnTerminal :: P.Parser String
+singleReturnTerminal = alt(P.string("\n"), map(always(""), P.eof))
+
+doubleReturnTerminal :: P.Parser String
+doubleReturnTerminal = P.choice([
+  P.string("\n\n"),
+  map(always(""), P.eof),
+  pipe(ap(pure((_, __) => "")), ap($, P.eof))(P.char("\n"))
+])
+
+code :: P.Parser Block
+code = pipe(
+  mapL((lang, c) => Code(lang, c)),
+  ap($, alt(P.letters, pure(""))),
+  apL($, P.char("\n")),
+  ap($, map(reduce(mappend, ""), P.manyTill(P.anyChar, P.lookAhead(P.string("\n```"))))),
+  apL($, P.choice([
+    map((_) => "", apL(P.string("\n```"), P.eof)),
+    P.string("\n```\n")
+  ]))
+)(P.string("```"))
+
+blockquote :: P.Parser Block
+blockquote = pipe(
+  mapL(Blockquote),
+  ap($, contentWithLineReturn(P.choice([P.char("\n"), P.string("```"), P.char(">")]))),
+  apL($, P.choice([doubleReturnTerminal, P.lookAhead(P.string("\n```")), P.lookAhead(P.string("\n>"))]))
+)(alt(P.symbol(">"), P.string(">")))
+
+paragraph :: P.Parser Block
+paragraph = pipe(
+  map(Paragraph),
+  apL($, P.choice([doubleReturnTerminal, P.lookAhead(P.string("\n```")), P.lookAhead(P.string("\n>"))]))
+)(contentWithLineReturn(P.choice([P.char("\n"), P.string("```"), P.char(">")])))
+
+
+block :: P.Parser Block
+block = P.choice([
+  heading(H6, "######"),
+  heading(H5, "#####"),
+  heading(H4, "####"),
+  heading(H3, "###"),
+  heading(H2, "##"),
+  heading(H1, "#"),
+  blockquote,
+  code,
+  paragraph
+])
+
+
+md :: P.Parser MarkDown
+md = pipe(
+  P.choice,
+  P.many,
+  map(pipe(
+    filter(where
+      is Just x : true
+      is Nothing: false
+    ),
+    map(where is Just x: x)
+  ))
+)([map(Just, block), map(always(Nothing), P.spaces)])
+
+
+
+mdFixture = `
+## This \`is\` a **with bold** *tiltle*!
+# This is a tiltle!
+
+>*I* am a blockquote
+
+\`\`\`javascript
+some code is in there
+
+
+\`\`\`
+
+
+[http://some-link.com]()
+[http://some-link.com](name)
+
+
+And some paragraph
+sdf \`TCHOU\` **and BIM**
+> with another blockquote
+same same
+> oups
+\`\`\`javascript
+some code is in there
+
+
+\`\`\`
+
+
+
+`
+
+P.runParser(md, mdFixture) |> IO.inspect

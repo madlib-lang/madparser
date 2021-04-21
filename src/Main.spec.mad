@@ -1,0 +1,26 @@
+import { assertEquals, test } from "TestTools"
+import { Right } from "Either"
+
+import { anyChar, oneOf, runParser } from "./Main"
+
+test("it should parse any character", (_) => {
+  input = "c"
+  expected = Right("c")
+  actual = runParser(anyChar, input)
+
+  return assertEquals(actual, expected)
+})
+
+test("it should parse specific characters", (_) => {
+  input = "cba"
+  expected = Right("cba")
+  abcParser = oneOf(["a", "b", "c"])
+  parser = pipe(
+    map((a, b, c) => a ++ b ++ c),
+    ap($, abcParser),
+    ap($, abcParser)
+  )(abcParser)
+  actual = runParser(parser, input)
+
+  return assertEquals(actual, expected)
+})

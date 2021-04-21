@@ -1,0 +1,6 @@
+coverage
+.coverage
+.run
+.tests
+build
+.DS_Store

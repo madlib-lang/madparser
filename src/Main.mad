@@ -1,0 +1,179 @@
+import {} from "Monad"
+import {} from "Alternative"
+import { apL } from "Applicative"
+import { Either, Right, Left } from "Either"
+import { Just, Nothing } from "Maybe"
+import { firstChar, drop, isEmpty, isLetter } from "String"
+import { includes, reduce } from "List"
+import { always, equals, ifElse } from "Function"
+import {} from "Number"
+
+import IO from "IO"
+
+
+export type Parser a = Parser (String -> List <a, String>)
+
+
+instance Functor Parser {
+  map = (f, m) => Parser((s) =>
+    map(
+      where is <a, b>: <f(a), b>,
+      parse(m, s)
+    )
+  )
+}
+
+instance Applicative Parser {
+  pure = (a) => Parser((s) => [<a, s>])
+
+  ap = (parserA, parserB) => Parser((s) =>
+    where(parse(parserA, s)) {
+      is [<f, s1>]  : where(parse(parserB, s1)) {
+        is [<a, s2>]: [<f(a), s2>]
+        is _        : []
+      }
+      is _: []
+    }
+  )
+}
+
+instance Monad Parser {
+  of = pure
+
+  chain = (f, m) => Parser((s) =>
+    where(parse(m, s))
+      is []       : []
+      is [<a, s1>]: parse(f(a), s1)
+  )
+}
+
+instance Alternative Parser {
+  empty = Parser((_) => [])
+
+  alt = (ma, mb) => Parser((s) =>
+    where(parse(ma, s))
+      is [] : parse(mb, s)
+      is res: res
+  )
+}
+
+parse :: Parser a -> String -> List <a, String>
+parse = (parser, input) => {
+  parseFn = where(parser)
+    is Parser fn: fn
+  return parseFn(input)
+}
+
+runParser :: Parser a -> String -> Either String a
+export runParser = (m, s) => where(parse(m, s))
+  is [<res, "">]: Right(res)
+  is [<_, rest>]: Left(IO.log(rest) |> (_) => "Err")
+  is e          : Left(IO.log(e) |> (_) => "Err")
+
+anyChar :: Parser String
+export anyChar = Parser((s) => pipe(
+  firstChar,
+  where
+    is Just c : [<c, drop(1, s)>]
+    is Nothing: []
+)(s))
+
+oneOf :: List String -> Parser String
+export oneOf = (cs) => satisfy(includes($, cs))
+
+choice :: List (Parser a) -> Parser a
+export choice = (ps) => reduce(alt, empty, ps)
+
+many :: Parser a -> Parser (List a)
+export many = (p) => alt(some(p), pure([]))
+
+some :: Parser a -> Parser (List a)
+export some = (p) => chain(
+  (first) => chain(
+    (rest) => of(mappend([first], rest)),
+    many(p)
+  ),
+  p
+)
+
+manyTill :: Parser a -> Parser b -> Parser (List a)
+export manyTill = (p, end) => pipe(
+  map(always(Just(()))),
+  alt($, pure(Nothing)),
+  chain(where
+    is Just _ : pure([])
+    is Nothing: chain((x) => map((y) => mappend([x], y), manyTill(p, end)), p)
+  )
+)(end)
+
+lookAhead :: Parser a -> Parser a
+export lookAhead = (p) => Parser((s) => where(parse(p, s))
+  is [<a, _>]: [<a, s>]
+  is _       : []
+)
+
+takeWhile :: (String -> Boolean) -> Parser String
+export takeWhile = (pred) => {
+  parser = Parser((s) => where(parse(anyChar, s))
+    is []         : [<"", s>]
+    is [<"", _>]  : [<"", s>]
+    is [<c, rest>]: pred(c) ? [<c, rest>] : [<"", s>]
+  )
+
+  return chain(
+    ifElse(
+      isEmpty,
+      pure,
+      (x) => map((next) => x ++ next, takeWhile(pred))
+    ),
+    parser
+  )
+}
+
+satisfy :: (String -> Boolean) -> Parser String
+export satisfy = (pred) => chain(
+  ifElse(pred, of, always(empty)),
+  anyChar
+)
+
+char :: String -> Parser String
+export char = pipe(equals, satisfy)
+
+eof :: Parser ()
+export eof = Parser((s) => where(parse(anyChar, s))
+  is []: [<(), "">]
+  is _ : []
+)
+
+string :: String -> Parser String
+export string = (s) => where(firstChar(s))
+  is Just c :
+    pipe(
+      map((a, b) => a ++ b),
+      ap($, string(drop(1, s)))
+    )(char(c))
+  is Nothing: pure("")
+
+spaces :: Parser String
+export spaces = pipe(
+  oneOf,
+  some,
+  map(reduce(mappend, ""))
+)([" ", "\n", "\r", "\t"])
+
+token :: Parser a -> Parser a
+export token = apL($, spaces)
+
+symbol :: String -> Parser String
+export symbol = pipe(string, token)
+
+letter :: Parser String
+export letter = satisfy(isLetter)
+
+letters :: Parser String
+export letters = pipe(
+  satisfy,
+  many,
+  map(reduce(mappend, ""))
+)(isLetter)
+
