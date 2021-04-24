@@ -19,7 +19,7 @@ incLoc = (c) => where is Loc abs line col: c == "\n"
 
 export type Parser a = Parser (String -> Location -> <List <a, String>, Location>)
 
-type Error = Error Location
+export type Error = Error Location
 
 parse :: Parser a -> String -> Location -> <List <a, String>, Location>
 parse = (parser, input, loc) => {
