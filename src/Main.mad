@@ -3,9 +3,9 @@ import {} from "Alternative"
 import { apL } from "Applicative"
 import { Either, Right, Left } from "Either"
 import { Just, Nothing } from "Maybe"
-import { firstChar, drop, isEmpty, isLetter } from "String"
+import { firstChar, drop, isEmpty, isDigit, isLetter } from "String"
 import { includes, reduce } from "List"
-import { always, equals, ifElse } from "Function"
+import { always, complement, equals, ifElse, notEquals } from "Function"
 import {} from "Number"
 
 import IO from "IO"
@@ -89,6 +89,9 @@ export location = Parser((s, l) => <[<l, s>], l>)
 oneOf :: List String -> Parser String
 export oneOf = (cs) => satisfy(includes($, cs))
 
+notOneOf :: List String -> Parser String
+export notOneOf = (cs) => satisfy(complement(includes($, cs)))
+
 choice :: List (Parser a) -> Parser a
 export choice = (ps) => reduce(alt, empty, ps)
 
@@ -156,6 +159,9 @@ export satisfy = (pred) => chain(
 char :: String -> Parser String
 export char = pipe(equals, satisfy)
 
+notChar :: String -> Parser String
+export notChar = pipe(notEquals, satisfy)
+
 eof :: Parser ()
 export eof = Parser((s, l) => where(parse(anyChar, s, l))
   is <[], _>: <[<(), "">], l>
@@ -183,6 +189,9 @@ export token = apL($, spaces)
 
 symbol :: String -> Parser String
 export symbol = pipe(string, token)
+
+digit :: Parser String
+export digit = satisfy(isDigit)
 
 letter :: Parser String
 export letter = satisfy(isLetter)

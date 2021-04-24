@@ -43,6 +43,7 @@ between = (start, mid, end) => pipe(
 contentCharacter :: P.Parser String
 contentCharacter = P.choice([
   P.letter,
+  P.digit,
   P.char("!"),
   P.char("?"),
   P.char(" ")
@@ -51,12 +52,14 @@ contentCharacter = P.choice([
 linkCharacter :: P.Parser String
 linkCharacter = P.choice([
   P.letter,
+  P.digit,
   P.char("/"),
   P.char(":"),
   P.char("?"),
   P.char("."),
   P.char("-"),
   P.char("_"),
+  P.char("="),
   P.char("#")
 ])
 
@@ -65,61 +68,77 @@ linkCharacter = P.choice([
 bold :: P.Parser ContentPart
 bold = pipe(
   mapL(Bold),
-  ap($, pipe(P.some, map(reduce(mappend, "")))(contentCharacter)),
+  ap($, pipe(
+    P.someTill($, P.lookAhead(P.string("**"))),
+    map(reduce(mappend, ""))
+  )(P.notChar("\n"))),
   apL($, P.string("**"))
 )(P.string("**"))
 
 italic :: P.Parser ContentPart
 italic = pipe(
-  mapL(Italic),
-  ap($, pipe(P.some, map(reduce(mappend, "")))(contentCharacter)),
-  apL($, P.string("*"))
-)(P.string("*"))
+  mapL((a, b) => Italic(a ++ b)),
+  ap($, P.notChar(" ")),
+  ap($, pipe(P.many, map(reduce(mappend, "")))(P.notOneOf(["*", "\n"]))),
+  apL($, P.char("*"))
+)(P.char("*"))
 
 inlineCode :: P.Parser ContentPart
 inlineCode = pipe(
   mapL(InlineCode),
-  ap($, pipe(P.many, map(reduce(mappend, "")))(contentCharacter)),
-  apL($, P.string("`"))
-)(P.string("`"))
+  ap($, pipe(P.many, map(reduce(mappend, "")))(P.notOneOf(["`", "\n"]))),
+  apL($, P.char("`"))
+)(P.char("`"))
 
 link :: P.Parser ContentPart
 link = pipe(
   map(Link),
   ap($, between(
-    P.string("("),
-    pipe(P.many, map(reduce(mappend, "")))(contentCharacter),
-    P.string(")")
+    P.char("("),
+    pipe(P.many, map(reduce(mappend, "")))(P.notOneOf([")", "\n"])),
+    P.char(")")
   ))
 )(between(
-  P.string("["),
+  P.char("["),
   pipe(P.many, map(reduce(mappend, "")))(linkCharacter),
-  P.string("]")
+  P.char("]")
 ))
 
 image :: P.Parser ContentPart
 image = pipe(
   mapL(Image),
   ap($, between(
-    P.string("["),
-    pipe(P.many, map(reduce(mappend, "")))(contentCharacter),
-    P.string("]")
+    P.char("["),
+    pipe(P.many, map(reduce(mappend, "")))(P.notOneOf(["]", "\n"])),
+    P.char("]")
   )),
   ap($, between(
-    P.string("("),
+    P.char("("),
     pipe(P.many, map(reduce(mappend, "")))(linkCharacter),
-    P.string(")")
+    P.char(")")
   ))
 )(P.char("!"))
 
+textTerminals :: P.Parser String
+textTerminals = P.choice([
+  map(always(""), bold),
+  map(always(""), italic),
+  map(always(""), inlineCode),
+  map(always(""), image),
+  map(always(""), link),
+  P.char("\n")
+])
+
 text :: P.Parser ContentPart
 text = pipe(
-  (cp) => alt(
-    P.someTill(cp, P.lookAhead(map(always(""), image))),
-    P.some(cp)
-  ),
+  P.someTill($, P.lookAhead(textTerminals)),
+  // (cp) => alt(
+  //   P.someTill(cp, P.lookAhead(textTerminals)),
+  //   P.some(cp)
+  // ),
   map(pipe(reduce(mappend, ""), Text))
-)(contentCharacter)
+// )(contentCharacter)
+)(P.notChar("\n"))
 
 lineReturn :: P.Parser ContentPart
 lineReturn = map(always(LineReturn), P.char("\n"))
@@ -158,7 +177,7 @@ heading = (constructor) => pipe(
 )
 
 singleReturnTerminal :: P.Parser String
-singleReturnTerminal = alt(P.string("\n"), map(always(""), P.eof))
+singleReturnTerminal = alt(P.char("\n"), map(always(""), P.eof))
 
 doubleReturnTerminal :: P.Parser String
 doubleReturnTerminal = P.choice([
@@ -201,7 +220,7 @@ paragraph = pipe(
 unorderedListItem :: P.Parser Content
 unorderedListItem = pipe(
   chain(always(apL(content, singleReturnTerminal)))
-)(apL(P.char("*"), P.some(P.char(" "))))
+)(apL(P.oneOf(["*", "-", "+"]), P.some(P.char(" "))))
 
 unorderedList :: P.Parser Block
 unorderedList = pipe(
@@ -217,10 +236,10 @@ block = P.choice([
   heading(H3, "###"),
   heading(H2, "##"),
   heading(H1, "#"),
+  unorderedList,
   blockquote,
   code,
-  paragraph,
-  unorderedList
+  paragraph
 ])
 
 
@@ -239,11 +258,12 @@ md = pipe(
 
 
 
+
 mdFixture = `
 ## This \`is\` a **with bold** *tiltle*!
 # This is a tiltle!
 
->*I* am a blockquote
+>*I* am a blockquote * not italic*
 
 \`\`\`javascript
 some code is in there
@@ -252,10 +272,11 @@ some code is in there
 \`\`\`
 
 
-[http://some-link.com]() [http://some-link.com](name)
+[http://some-link11.com]() [http://some-link.com](name)
    sdf     ![alt text](http://image-url.com)
-And some paragraph
-sdf \`TCHOU\` **and BIM**
+And some paragraph1
+sdf \`TCHOU\` **and BIM** and *italic again*
+
 > with another blockquote
 same same
 > oups
@@ -264,11 +285,18 @@ some code is in there
 
 * This is not a list
 * because it's in a code block!
++ because it's in a code block!
+- because it's in a code block!
 
 \`\`\`
-* list *YO*
-* second item
 
+* list YO
+* second item
++ third
+- fourth ! + some chars $ that [] are @ \`random\` with a [http://someplace.com](link)
+
+
+**CRAZY BOLD ALSO BOLD !&%$§[]**+#
 
 `
 
