@@ -13,6 +13,7 @@ type ContentPart
   | Italic String
   | InlineCode String
   | Link String String
+  | Image String String
   | LineReturn
 
 alias Content = List ContentPart
@@ -27,6 +28,7 @@ type Block
   | Paragraph Content
   | Blockquote Content
   | Code String String
+  | UnorderedList (List Content)
 
 alias MarkDown = List Block
 
@@ -58,11 +60,7 @@ linkCharacter = P.choice([
   P.char("#")
 ])
 
-text :: P.Parser ContentPart
-text = pipe(
-  P.some,
-  map(pipe(reduce(mappend, ""), Text))
-)(contentCharacter)
+
 
 bold :: P.Parser ContentPart
 bold = pipe(
@@ -99,6 +97,30 @@ link = pipe(
   P.string("]")
 ))
 
+image :: P.Parser ContentPart
+image = pipe(
+  mapL(Image),
+  ap($, between(
+    P.string("["),
+    pipe(P.many, map(reduce(mappend, "")))(contentCharacter),
+    P.string("]")
+  )),
+  ap($, between(
+    P.string("("),
+    pipe(P.many, map(reduce(mappend, "")))(linkCharacter),
+    P.string(")")
+  ))
+)(P.char("!"))
+
+text :: P.Parser ContentPart
+text = pipe(
+  (cp) => alt(
+    P.someTill(cp, P.lookAhead(map(always(""), image))),
+    P.some(cp)
+  ),
+  map(pipe(reduce(mappend, ""), Text))
+)(contentCharacter)
+
 lineReturn :: P.Parser ContentPart
 lineReturn = map(always(LineReturn), P.char("\n"))
 
@@ -106,7 +128,7 @@ content :: P.Parser Content
 content = pipe(
   P.choice,
   P.many
-)([bold, italic, inlineCode, text, link])
+)([bold, italic, inlineCode, image, link, text])
 
 
 lineReturnExceptBefore :: P.Parser a -> P.Parser ContentPart
@@ -125,7 +147,7 @@ contentWithLineReturn = (delimiter) => pipe(
   P.choice,
   P.some,
   map(dropWhile(equals(LineReturn)))
-)([bold, italic, inlineCode, text, link, lineReturnExceptBefore(delimiter)])
+)([bold, italic, inlineCode, image, link, text, lineReturnExceptBefore(delimiter)])
 
 heading :: (Content -> Block) -> String -> P.Parser Block
 heading = (constructor) => pipe(
@@ -161,7 +183,11 @@ blockquote :: P.Parser Block
 blockquote = pipe(
   mapL(Blockquote),
   ap($, contentWithLineReturn(P.choice([P.char("\n"), P.string("```"), P.char(">")]))),
-  apL($, P.choice([doubleReturnTerminal, P.lookAhead(P.string("\n```")), P.lookAhead(P.string("\n>"))]))
+  apL($, P.choice([
+    doubleReturnTerminal,
+    P.lookAhead(P.string("\n```")),
+    P.lookAhead(P.string("\n>"))
+  ]))
 )(alt(P.symbol(">"), P.string(">")))
 
 paragraph :: P.Parser Block
@@ -170,6 +196,18 @@ paragraph = pipe(
   apL($, P.choice([doubleReturnTerminal, P.lookAhead(P.string("\n```")), P.lookAhead(P.string("\n>"))]))
 )(contentWithLineReturn(P.choice([P.char("\n"), P.string("```"), P.char(">")])))
 
+
+
+unorderedListItem :: P.Parser Content
+unorderedListItem = pipe(
+  chain(always(apL(content, singleReturnTerminal)))
+)(apL(P.char("*"), P.some(P.char(" "))))
+
+unorderedList :: P.Parser Block
+unorderedList = pipe(
+  P.some,
+  map(UnorderedList)
+)(unorderedListItem)
 
 block :: P.Parser Block
 block = P.choice([
@@ -181,7 +219,8 @@ block = P.choice([
   heading(H1, "#"),
   blockquote,
   code,
-  paragraph
+  paragraph,
+  unorderedList
 ])
 
 
@@ -196,7 +235,7 @@ md = pipe(
     ),
     map(where is Just x: x)
   ))
-)([map(Just, block), map(always(Nothing), P.spaces)])
+)([map(always(Nothing), P.spaces), map(Just, block)])
 
 
 
@@ -213,10 +252,8 @@ some code is in there
 \`\`\`
 
 
-[http://some-link.com]()
-[http://some-link.com](name)
-
-
+[http://some-link.com]() [http://some-link.com](name)
+   sdf     ![alt text](http://image-url.com)
 And some paragraph
 sdf \`TCHOU\` **and BIM**
 > with another blockquote
@@ -225,11 +262,17 @@ same same
 \`\`\`javascript
 some code is in there
 
+* This is not a list
+* because it's in a code block!
 
 \`\`\`
-
+* list *YO*
+* second item
 
 
 `
+
+
+// P.runParser(alt(P.someTill(contentCharacter, P.string("![")), P.some(contentCharacter)) |> P.many, "sdf![sdf") |> IO.inspect
 
 P.runParser(md, mdFixture) |> IO.inspect

@@ -17,28 +17,40 @@ incLoc = (c) => where is Loc abs line col: c == "\n"
   ? Loc(abs + 1, line + 1, 0)
   : Loc(abs + 1, line, col + 1)
 
-export type Parser a = Parser (String -> Location -> List <a, String, Location>)
+export type Parser a = Parser (String -> Location -> <List <a, String>, Location>)
 
+type Error = Error Location
+
+parse :: Parser a -> String -> Location -> <List <a, String>, Location>
+parse = (parser, input, loc) => {
+  parseFn = where(parser)
+    is Parser fn: fn
+  return parseFn(input, loc)
+}
+
+runParser :: Parser a -> String -> Either Error a
+export runParser = (m, s) => where(parse(m, s, Loc(0, 0, 0)))
+  is <[<res, "">], _>: Right(res)
+  is <[<_, rest>], l>: Left(Error(l))
+  is <_, l>          : Left(Error(l))
 
 instance Functor Parser {
-  map = (f, m) => Parser((s, l) =>
-    map(
-      where is <a, b, loc>: <f(a), b, loc>,
-      parse(m, s, l)
-    )
+  map = (f, m) => Parser((s, l) => where(parse(m, s, l))
+    is <[<a, b>], loc>: <[<f(a), b>], loc>
+    is <[], loc>      : <[], loc>
   )
 }
 
 instance Applicative Parser {
-  pure = (a) => Parser((s, l) => [<a, s, l>])
+  pure = (a) => Parser((s, l) => <[<a, s>], l>)
 
   ap = (parserA, parserB) => Parser((s, l) =>
     where(parse(parserA, s, l)) {
-      is [<f, s1, l1>]: where(parse(parserB, s1, l1)) {
-        is [<a, s2, l2>]: [<f(a), s2, l2>]
-        is _            : []
+      is <[], l1>       : <[], l1>
+      is <[<f, s1>], l1>: where(parse(parserB, s1, l1)) {
+        is <[<a, s2>], l2>: <[<f(a), s2>], l2>
+        is <[], l2>       : <[], l2>
       }
-      is _: []
     }
   )
 }
@@ -48,44 +60,31 @@ instance Monad Parser {
 
   chain = (f, m) => Parser((s, l) =>
     where(parse(m, s, l))
-      is []           : []
-      is [<a, s1, l1>]: parse(f(a), s1, l1)
+      is <[], ll>       : <[], ll>
+      is <[<a, s1>], l1>: parse(f(a), s1, l1)
   )
 }
 
 instance Alternative Parser {
-  empty = Parser((_, __) => [])
+  empty = Parser((_, l) => <[], l>)
 
   alt = (ma, mb) => Parser((s, l) =>
     where(parse(ma, s, l))
-      is [] : parse(mb, s, l)
-      is res: res
+      is <[], _> : parse(mb, s, l)
+      is res     : res
   )
 }
-
-parse :: Parser a -> String -> Location -> List <a, String, Location>
-parse = (parser, input, loc) => {
-  parseFn = where(parser)
-    is Parser fn: fn
-  return parseFn(input, loc)
-}
-
-runParser :: Parser a -> String -> Either String a
-export runParser = (m, s) => where(parse(m, s, Loc(0, 0, 0)))
-  is [<res, "", _>]: Right(res)
-  is [<_, rest, l>]: Left(IO.log(l) |> (_) => "Err")
-  is e             : Left(IO.log(e) |> (_) => "Err")
 
 anyChar :: Parser String
 export anyChar = Parser((s, l) => pipe(
   firstChar,
   where
-    is Just c : [<c, drop(1, s), incLoc(c, l)>]
-    is Nothing: []
+    is Just c : <[<c, drop(1, s)>], incLoc(c, l)>
+    is Nothing: <[], l>
 )(s))
 
 location :: Parser Location
-export location = Parser((s, l) => [<l, s, l>])
+export location = Parser((s, l) => <[<l, s>], l>)
 
 oneOf :: List String -> Parser String
 export oneOf = (cs) => satisfy(includes($, cs))
@@ -98,8 +97,8 @@ export many = (p) => alt(some(p), pure([]))
 
 some :: Parser a -> Parser (List a)
 export some = (p) => chain(
-  (first) => chain(
-    (rest) => of(mappend([first], rest)),
+  (first) => map(
+    (rest) => mappend([first], rest),
     many(p)
   ),
   p
@@ -115,18 +114,27 @@ export manyTill = (p, end) => pipe(
   )
 )(end)
 
+someTill :: Parser a -> Parser b -> Parser (List a)
+export someTill = (p, end) => chain(
+  (first) => map(
+    (rest) => mappend([first], rest),
+    manyTill(p, end)
+  ),
+  p
+)
+
 lookAhead :: Parser a -> Parser a
 export lookAhead = (p) => Parser((s, l) => where(parse(p, s, l))
-  is [<a, _, _>]: [<a, s, l>]
-  is _          : []
+  is <[<a, _>], _>: <[<a, s>], l>
+  is _            : <[], l>
 )
 
 takeWhile :: (String -> Boolean) -> Parser String
 export takeWhile = (pred) => {
   parser = Parser((s, l) => where(parse(anyChar, s, l))
-    is []             : [<"", s, l>]
-    is [<"", _, _>]   : [<"", s, l>]
-    is [<c, rest, ll>]: pred(c) ? [<c, rest, ll>] : [<"", s, l>]
+    is <[], _>          : <[<"", s>], l>
+    is <[<"", _>], _>   : <[<"", s>], l>
+    is <[<c, rest>], ll>: pred(c) ? <[<c, rest>], ll> : <[<"", s>], l>
   )
 
   return chain(
@@ -150,8 +158,8 @@ export char = pipe(equals, satisfy)
 
 eof :: Parser ()
 export eof = Parser((s, l) => where(parse(anyChar, s, l))
-  is []: [<(), "", l>]
-  is _ : []
+  is <[], _>: <[<(), "">], l>
+  is _ : <[], l>
 )
 
 string :: String -> Parser String
