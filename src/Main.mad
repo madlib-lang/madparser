@@ -363,6 +363,14 @@ export eof = Parser((s, l) => where(parse(anyChar, s, l))
   is _ : <[], l>
 )
 
+/**
+ * A parser combinator that parses a given string.
+ *
+ * @since 0.0.1
+ * @example
+ * runParser(string("hello world"), "hello world") // Right "hello world"
+ * runParser(string("hello world"), "hello")       // Left (Loc 0 0 0)
+ */
 string :: String -> Parser String
 export string = (s) => where(firstChar(s))
   is Just c :
@@ -372,6 +380,15 @@ export string = (s) => where(firstChar(s))
     )(char(c))
   is Nothing: pure("")
 
+/**
+ * A parser combinator that parses empty characters such as spaces, line returns
+ * or tabs.
+ *
+ * @since 0.0.1
+ * @example
+ * runParser(spaces, " \t\n")  // Right " \t\n"
+ * runParser(spaces, " \t\na") // Left (Loc 0 0 0)
+ */
 spaces :: Parser String
 export spaces = pipe(
   oneOf,
@@ -379,18 +396,51 @@ export spaces = pipe(
   map(reduce(mappend, ""))
 )([" ", "\n", "\r", "\t"])
 
+/**
+ * A parser combinator that parses the given parser and discards all trailing
+ * spaces.
+ *
+ * @since 0.0.1
+ * @example
+ * runParser(token(string("hello")), "hello\n")  // Right "hello"
+ * runParser(token(string("hello")), "hello\n!") // Left (Loc 0 0 0)
+ */
 token :: Parser a -> Parser a
 export token = apL($, spaces)
 
+/**
+ * A parser combinator that parses a given string and discards all trailing
+ * spaces.
+ *
+ * @since 0.0.1
+ * @example
+ * runParser(symbol("hello"), "hello\n")  // Right "hello"
+ * runParser(symbol("hello"), "hello\n!") // Left (Loc 0 0 0)
+ */
 symbol :: String -> Parser String
 export symbol = pipe(string, token)
 
+/**
+ * A parser combinator that parses a digit.
+ *
+ * @since 0.0.1
+ */
 digit :: Parser String
 export digit = satisfy(isDigit)
 
+/**
+ * A parser combinator that parses a letter.
+ *
+ * @since 0.0.1
+ */
 letter :: Parser String
 export letter = satisfy(isLetter)
 
+/**
+ * A parser combinator that parses many letters.
+ *
+ * @since 0.0.1
+ */
 letters :: Parser String
 export letters = pipe(
   satisfy,
