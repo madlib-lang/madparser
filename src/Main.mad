@@ -168,9 +168,9 @@ export location = Parser((s, l) => <[<l, s>], l>)
  *
  * @since 0.0.1
  * @example
- * parse(oneOf(["1", "-", "?"]), "?") // Right "?"
- * parse(oneOf(["1", "-", "?"]), "1") // Right "1"
- * parse(oneOf(["1", "-", "?"]), "2") // Left (Loc 0 0 0)
+ * runParser(oneOf(["1", "-", "?"]), "?") // Right "?"
+ * runParser(oneOf(["1", "-", "?"]), "1") // Right "1"
+ * runParser(oneOf(["1", "-", "?"]), "2") // Left (Loc 0 0 0)
  */
 oneOf :: List String -> Parser String
 export oneOf = (cs) => satisfy(includes($, cs))
@@ -180,20 +180,47 @@ export oneOf = (cs) => satisfy(includes($, cs))
  *
  * @since 0.0.1
  * @example
- * parse(notOneOf(["1", "-", "?"]), "?") // Left (Loc 0 0 0)
- * parse(notOneOf(["1", "-", "?"]), "1") // Left (Loc 0 0 0)
- * parse(notOneOf(["1", "-", "?"]), "2") // Right "2"
+ * runParser(notOneOf(["1", "-", "?"]), "?") // Left (Loc 0 0 0)
+ * runParser(notOneOf(["1", "-", "?"]), "1") // Left (Loc 0 0 0)
+ * runParser(notOneOf(["1", "-", "?"]), "2") // Right "2"
  */
 notOneOf :: List String -> Parser String
 export notOneOf = (cs) => satisfy(complement(includes($, cs)))
 
-
+/**
+ * A parser combinator that successively tries all given parsers until one
+ * succeeds, or fails if none has succeeded.
+ *
+ * @since 0.0.1
+ * @example
+ * parser = choice([string("good"), string("really good")])
+ * runParser(parser, "good")        // Right "good"
+ * runParser(parser, "really good") // Right "really good"
+ * runParser(parser, "really")      // Left (Loc 0 0 0)
+ */
 choice :: List (Parser a) -> Parser a
 export choice = (ps) => reduce(alt, empty, ps)
 
+/**
+ * A parser combinator that applies 0 or more times the given parser.
+ *
+ * @since 0.0.1
+ * @example
+ * runParser(many(string("OK")), "OKOKOK") // Right "OKOKOK"
+ * runParser(many(string("O")), "OKOKOK")  // Left (Loc 1 0 1)
+ */
 many :: Parser a -> Parser (List a)
 export many = (p) => alt(some(p), pure([]))
 
+/**
+ * A parser combinator that applies 1 or more times the given parser. If no parse
+ * is found at all it'll fail.
+ *
+ * @since 0.0.1
+ * @example
+ * runParser(some(string("OK")), "OKOKOK") // Right "OKOKOK"
+ * runParser(some(string("OK")), "NOPE")   // Left (Loc 0 0 0)
+ */
 some :: Parser a -> Parser (List a)
 export some = (p) => chain(
   (first) => map(
@@ -203,6 +230,17 @@ export some = (p) => chain(
   p
 )
 
+/**
+ * A parser combinator that matches many times the first given parser until the
+ * second one matches. Note that the input matched by the end parser will then
+ * be consumed. If you don't want to consume the end parser's matched input,
+ * you can use lookAhead.
+ *
+ * @since 0.0.1
+ * @example
+ * parser = manyTill(char("a"), char("b"))
+ * runParser(parser, "aaaaab") // Right "aaaaa"
+ */
 manyTill :: Parser a -> Parser b -> Parser (List a)
 export manyTill = (p, end) => pipe(
   map(always(Just(()))),
@@ -213,6 +251,20 @@ export manyTill = (p, end) => pipe(
   )
 )(end)
 
+/**
+ * A parser combinator that matches one or more times the first given parser until the
+ * second one matches. If the first parser does not match the input, it will fail.
+ * Note that the input matched by the end parser will then be consumed. If you don't
+ * want to consume the end parser's matched input, you can use lookAhead.
+ *
+ * @since 0.0.1
+ * @example
+ * parser1 = someTill(char("a"), char("b"))
+ * runParser(parser1, "aaaaab") // Right "aaaaa"
+ *
+ * parser2 = someTill(char("a"), char("b"))
+ * runParser(parser2, "b") // Left (Loc 0 0 0)
+ */
 someTill :: Parser a -> Parser b -> Parser (List a)
 export someTill = (p, end) => chain(
   (first) => map(
@@ -222,12 +274,27 @@ export someTill = (p, end) => chain(
   p
 )
 
+/**
+ * A parser combinator that makes the given parser not consume any input.
+ *
+ * @since 0.0.1
+ * @example
+ * alt(char("a"), lookAhead(anyChar))
+ */
 lookAhead :: Parser a -> Parser a
 export lookAhead = (p) => Parser((s, l) => where(parse(p, s, l))
   is <[<a, _>], _>: <[<a, s>], l>
   is _            : <[], l>
 )
 
+/**
+ * A parser combinator that parses all characters while the given predicate
+ * returns true.
+ *
+ * @since 0.0.1
+ * @example
+ * runParser(takeWhile(notEquals("-")), "abcdef-")
+ */
 takeWhile :: (String -> Boolean) -> Parser String
 export takeWhile = (pred) => {
   parser = Parser((s, l) => where(parse(anyChar, s, l))
@@ -246,18 +313,50 @@ export takeWhile = (pred) => {
   )
 }
 
+/**
+ * A parser combinator that parses a character based on a given predicate.
+ *
+ * @since 0.0.1
+ * @example
+ * runParser(satisfy(isDigit), "1")  // Right "1"
+ * runParser(satisfy(isLetter), "1") // Left (Loc 0 0 0)
+ */
 satisfy :: (String -> Boolean) -> Parser String
 export satisfy = (pred) => chain(
   ifElse(pred, of, always(empty)),
   anyChar
 )
 
+/**
+ * A parser combinator that parses a single given character.
+ *
+ * @since 0.0.1
+ * @example
+ * runParser(char("a"), "a") // Right "a"
+ * runParser(char("a"), "b") // Left (Loc 0 0 0)
+ */
 char :: String -> Parser String
 export char = pipe(equals, satisfy)
 
+/**
+ * The complement of char, it parses any char that is not the one given.
+ *
+ * @since 0.0.1
+ * @example
+ * runParser(notChar("a"), "a") // Left (Loc 0 0 0)
+ * runParser(notChar("a"), "b") // Right "a"
+ */
 notChar :: String -> Parser String
 export notChar = pipe(notEquals, satisfy)
 
+/**
+ * A parser combinator that parses the eof token, or the end of the input.
+ *
+ * @since 0.0.1
+ * @example
+ * runParser(eof, "")  // Right ()
+ * runParser(eof, "a") // Left (Loc 0 0 0)
+ */
 eof :: Parser ()
 export eof = Parser((s, l) => where(parse(anyChar, s, l))
   is <[], _>: <[<(), "">], l>
