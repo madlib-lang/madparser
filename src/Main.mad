@@ -8,8 +8,6 @@ import { includes, reduce } from "List"
 import { always, complement, equals, ifElse, notEquals } from "Function"
 import {} from "Number"
 
-import IO from "IO"
-
 export type Location = Loc Number Number Number
 
 incLoc :: String -> Location -> Location
@@ -28,12 +26,29 @@ parse = (parser, input, loc) => {
   return parseFn(input, loc)
 }
 
+/**
+ * Runs a given parser with a given input. If it is successful it returns a Right
+ * of the parsed type, otherwise it returns an error with the location of where
+ * it failed.
+ *
+ * @since 0.0.1
+ * @example
+ * runParser(anyChar, "a")
+ */
 runParser :: Parser a -> String -> Either Error a
 export runParser = (m, s) => where(parse(m, s, Loc(0, 0, 0)))
   is <[<res, "">], _>: Right(res)
   is <[<_, rest>], l>: Left(Error(l))
   is <_, l>          : Left(Error(l))
 
+/**
+ * maps the contained value of a Parser.
+ *
+ * @since 0.0.1
+ * @example
+ * type Letter = Letter String
+ * map(Letter, anyChar) // Parser Letter
+ */
 instance Functor Parser {
   map = (f, m) => Parser((s, l) => where(parse(m, s, l))
     is <[<a, b>], loc>: <[<f(a), b>], loc>
@@ -41,6 +56,18 @@ instance Functor Parser {
   )
 }
 
+/**
+ * This is the heart of how parser combinators work. With ap you can apply many
+ * arguments to a mapping function.
+ *
+ * @since 0.0.1
+ * @example
+ * parser = pipe(
+ *   map((a, b, c) => a ++ b ++ c),
+ *   ap($, abcParser),
+ *   ap($, abcParser)
+ * )(abcParser)
+ */
 instance Applicative Parser {
   pure = (a) => Parser((s, l) => <[<a, s>], l>)
 
@@ -55,6 +82,12 @@ instance Applicative Parser {
   )
 }
 
+/**
+ * The Monad instance of Parser helps when you need to parse something based on
+ * the previous computation.
+ *
+ * @since 0.0.1
+ */
 instance Monad Parser {
   of = pure
 
@@ -65,6 +98,14 @@ instance Monad Parser {
   )
 }
 
+/**
+ * Alternative provides a way to fail over in case a parser failed. alt takes two
+ * parsers, and if the first one fails, it tries to run the second one.
+ *
+ * @since 0.0.1
+ * @example
+ * runParser(alt(char("c"), char("a")), "a") // Right "a"
+ */
 instance Alternative Parser {
   empty = Parser((_, l) => <[], l>)
 
@@ -75,6 +116,14 @@ instance Alternative Parser {
   )
 }
 
+/**
+ * A parser combinator that matches any character and returns a Parser String
+ * containing that character.
+ *
+ * @since 0.0.1
+ * @example
+ * parse(anyChar, "?") // Right "?"
+ */
 anyChar :: Parser String
 export anyChar = Parser((s, l) => pipe(
   firstChar,
@@ -83,14 +132,61 @@ export anyChar = Parser((s, l) => pipe(
     is Nothing: <[], l>
 )(s))
 
+/**
+ * A parser combinator that returns the current location in the given input. This
+ * combinator can be used to collect location information for your parsed AST.
+ *
+ * @since 0.0.1
+ * @example
+ * type Letter = L Location Location String
+ * expected = Right()
+ *
+ * abcParser = pipe(
+ *   map((start, c, end) => L(start, end, c)),
+ *   ap($, oneOf(["a", "b", "c"])),
+ *   ap($, location)
+ * )(location)
+ *
+ * parser = pipe(
+ *   map((a, b, c) => [a, b, c]),
+ *   ap($, abcParser),
+ *   ap($, abcParser)
+ * )(abcParser)
+ *
+ * runParser(parser, "cba")
+ * // Right [
+ * //   L(Loc(0, 0, 0), Loc(1, 0, 1), "c"),
+ * //   L(Loc(1, 0, 1), Loc(2, 0, 2), "b"),
+ * //   L(Loc(2, 0, 2), Loc(3, 0, 3), "a")
+ * // ]
+ */
 location :: Parser Location
 export location = Parser((s, l) => <[<l, s>], l>)
 
+/**
+ * A parser combinator that matches any of the given characters.
+ *
+ * @since 0.0.1
+ * @example
+ * parse(oneOf(["1", "-", "?"]), "?") // Right "?"
+ * parse(oneOf(["1", "-", "?"]), "1") // Right "1"
+ * parse(oneOf(["1", "-", "?"]), "2") // Left (Loc 0 0 0)
+ */
 oneOf :: List String -> Parser String
 export oneOf = (cs) => satisfy(includes($, cs))
 
+/**
+ * A parser combinator that matches all except the given characters.
+ *
+ * @since 0.0.1
+ * @example
+ * parse(notOneOf(["1", "-", "?"]), "?") // Left (Loc 0 0 0)
+ * parse(notOneOf(["1", "-", "?"]), "1") // Left (Loc 0 0 0)
+ * parse(notOneOf(["1", "-", "?"]), "2") // Right "2"
+ */
 notOneOf :: List String -> Parser String
 export notOneOf = (cs) => satisfy(complement(includes($, cs)))
+
 
 choice :: List (Parser a) -> Parser a
 export choice = (ps) => reduce(alt, empty, ps)
