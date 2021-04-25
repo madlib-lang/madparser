@@ -2,18 +2,35 @@
 [![build](https://github.com/madlib-lang/madparser/actions/workflows/build.yml/badge.svg)](https://github.com/madlib-lang/madparser/actions/workflows/build.yml)
 [![Coverage Status](https://coveralls.io/repos/github/madlib-lang/madparser/badge.svg?branch=master)](https://coveralls.io/github/madlib-lang/madparser?branch=master)
 
-## Getting started
-You just created a new madlib project, if it's your first project you should read the following.
+Parser is a parser library consisting of a Parser Monad and a lot of combinators. It is very close to attoparsec in its essense and should be used in a similar way. In most cases using Applicative and Functor instances should be enough and prefered.
 
-### Notes on Madlib
-Madlib is a general purpose programming language that compiles to Javascript. It means that you need to have [Nodejs](https://nodejs.org/) installed and configured in order to make it work. Madlib can target nodejs or browser, by default it will compile for nodejs.
+## How to install it
+Add it to the dependencies of your `madlib.json` file:
+```json
+{
+  "dependencies": {
+    "MadParser": "https://github.com/madlib-lang/madparser/archive/refs/heads/master.zip"
+}
+```
+Run `madlib install`
 
-### How to run it
-First, you need to compile the program:
-```shell
-madlib compile -i src/Main.mad
+## Basic usage
+```madlib
+import { oneOf, runParser } from "MadParser"
+import IO from "IO"
+
+input = "cba"
+
+abcParser = oneOf(["a", "b", "c"])
+
+parser = pipe(
+  map((a, b, c) => a ++ b ++ c),
+  ap($, abcParser),
+  ap($, abcParser)
+)(abcParser)
+
+runParser(parser, input) |> IO.log
 ```
-Then, you can run it like this:
-```shell
-node build/Main.mjs
-```
+
+## Examples
+There is currently a markdown parser based on it that is mainly used to render markdown within [MadUI](https://github.com/madlib-lang/madui) applications. You can find it here: [https://github.com/madlib-lang/madmarkdown-parser](https://github.com/madlib-lang/madmarkdown-parser).

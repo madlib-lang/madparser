@@ -2,5 +2,8 @@ coverage
 .coverage
 .run
 .tests
+.docs
 build
 .DS_Store
+madlib_modules
+node_modules
