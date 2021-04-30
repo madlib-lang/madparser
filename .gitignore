@@ -7,3 +7,4 @@ build
 .DS_Store
 madlib_modules
 node_modules
+src/Test.mad

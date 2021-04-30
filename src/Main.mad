@@ -3,10 +3,11 @@ import {} from "Alternative"
 import { apL } from "Applicative"
 import { Either, Right, Left } from "Either"
 import { Just, Nothing } from "Maybe"
-import { firstChar, drop, isEmpty, isDigit, isLetter } from "String"
+import { firstChar, drop, isDigit, isLetter } from "String"
 import { includes, reduce } from "List"
 import { always, complement, equals, ifElse, notEquals } from "Function"
 import {} from "Number"
+import { maybeLoop } from "Control"
 
 export type Location = Loc Number Number Number
 
@@ -20,11 +21,7 @@ export type Parser a = Parser (String -> Location -> <List <a, String>, Location
 export type Error = Error Location
 
 parse :: Parser a -> String -> Location -> <List <a, String>, Location>
-parse = (parser, input, loc) => {
-  parseFn = where(parser)
-    is Parser fn: fn
-  return parseFn(input, loc)
-}
+parse = (parser, input, loc) => where(parser) is Parser fn: fn(input, loc)
 
 /**
  * Runs a given parser with a given input. If it is successful it returns a Right
@@ -125,12 +122,12 @@ instance Alternative Parser {
  * parse(anyChar, "?") // Right "?"
  */
 anyChar :: Parser String
-export anyChar = Parser((s, l) => pipe(
-  firstChar,
-  where
-    is Just c : <[<c, drop(1, s)>], incLoc(c, l)>
-    is Nothing: <[], l>
-)(s))
+export anyChar = Parser((s, l) => #-{
+  let c = s[0]
+  return c !== undefined
+    ? [[[c, s.slice(1)]], incLoc(c)(l)]
+    : [[], l]
+}-#)
 
 /**
  * A parser combinator that returns the current location in the given input. This
@@ -206,11 +203,24 @@ export choice = (ps) => reduce(alt, empty, ps)
  *
  * @since 0.0.1
  * @example
- * runParser(many(string("OK")), "OKOKOK") // Right "OKOKOK"
+ * runParser(many(string("OK")), "OKOKOK") // Right ["OK", "OK", "OK"]
  * runParser(many(string("O")), "OKOKOK")  // Left (Loc 1 0 1)
  */
 many :: Parser a -> Parser (List a)
-export many = (p) => alt(some(p), pure([]))
+export many = (p) => Parser((s, l) => #-{
+  let ss = s
+  let ll = l
+  let acc = []
+  while (true) {
+    let [[res], loc] = parse(p)(ss)(ll)
+    if (!res) break
+    let [parsed, rest] = res
+    acc.push(parsed)
+    ss = rest
+    ll = loc
+  }
+  return [[[acc, ss]], ll]
+}-#)
 
 /**
  * A parser combinator that applies 1 or more times the given parser. If no parse
@@ -218,7 +228,7 @@ export many = (p) => alt(some(p), pure([]))
  *
  * @since 0.0.1
  * @example
- * runParser(some(string("OK")), "OKOKOK") // Right "OKOKOK"
+ * runParser(some(string("OK")), "OKOKOK") // Right ["OK", "OK", "OK"]
  * runParser(some(string("OK")), "NOPE")   // Left (Loc 0 0 0)
  */
 some :: Parser a -> Parser (List a)
@@ -242,14 +252,21 @@ export some = (p) => chain(
  * runParser(parser, "aaaaab") // Right "aaaaa"
  */
 manyTill :: Parser a -> Parser b -> Parser (List a)
-export manyTill = (p, end) => pipe(
-  map(always(Just(()))),
-  alt($, pure(Nothing)),
-  chain(where
-    is Just _ : pure([])
-    is Nothing: chain((x) => map((y) => mappend([x], y), manyTill(p, end)), p)
+export manyTill = (p, end) => Parser((s, l) => {
+  result = maybeLoop(<s, l, []>, (state) =>
+    where(state)
+      is <ss, ll, acc>:
+        where(parse(end, ss, ll))
+          is <[<_, _>], _>: Nothing
+          is _            :
+            where(parse(p, ss, ll))
+              is <[<parsed, rest>], loc>:
+                Just(<rest, loc, #- acc.push(parsed) && acc-#>)
+              is _: Nothing
   )
-)(end)
+
+  return where(result) is <rest, loc, parseResult>: <[<parseResult, rest>], loc>
+})
 
 /**
  * A parser combinator that matches one or more times the first given parser until the
@@ -296,22 +313,19 @@ export lookAhead = (p) => Parser((s, l) => where(parse(p, s, l))
  * runParser(takeWhile(notEquals("-")), "abcdef-")
  */
 takeWhile :: (String -> Boolean) -> Parser String
-export takeWhile = (pred) => {
-  parser = Parser((s, l) => where(parse(anyChar, s, l))
-    is <[], _>          : <[<"", s>], l>
-    is <[<"", _>], _>   : <[<"", s>], l>
-    is <[<c, rest>], ll>: pred(c) ? <[<c, rest>], ll> : <[<"", s>], l>
+export takeWhile = (pred) => Parser((s, l) => {
+  result = maybeLoop(<s, l, "">, (state) =>
+    where(state)
+      is <ss, ll, acc>:
+        where(parse(anyChar, ss, ll))
+          is <[<parsed, rest>], loc>: pred(parsed)
+            ? Just(<rest, loc, acc ++ parsed>)
+            : Nothing
+          is _: Nothing
   )
 
-  return chain(
-    ifElse(
-      isEmpty,
-      pure,
-      (x) => map((next) => x ++ next, takeWhile(pred))
-    ),
-    parser
-  )
-}
+  return where(result) is <rest, loc, parseResult>: <[<parseResult, rest>], loc>
+})
 
 /**
  * A parser combinator that parses a character based on a given predicate.
