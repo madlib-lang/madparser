@@ -1,12 +1,8 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('util')) :
-  typeof define === 'function' && define.amd ? define(['exports', 'util'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.exe = {}, global.util));
-}(this, (function (exports, util) { 'use strict';
-
-  function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
-
-  var util__default = /*#__PURE__*/_interopDefaultLegacy(util);
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+  typeof define === 'function' && define.amd ? define(['exports'], factory) :
+  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.exe = {}));
+}(this, (function (exports) { 'use strict';
 
   window.$ = '__$__';
   const PLACEHOLDER = '__$__';
@@ -108,15 +104,15 @@
   window.Show = {};
 
   // file: /opt/hostedtoolcache/node/14.16.1/x64/lib/node_modules/@madlib-lang/madlib/node_modules/binary-install/bin/prelude/__internal__/Function.mad
-  let complement = __curry__((fn, x) => !(fn(x)));
-  let always = __curry__((a, b) => a);
-  let identity = __curry__((a) => a);
-  let equals = __curry__((val, a) => __eq__(val, a));
-  let notEquals = __curry__((val, a) => !__eq__(val, a));
-  let ifElse = __curry__((predicate, truthy, falsy, value) => (predicate(value) ? truthy(value) : falsy(value)));
-  let when = __curry__((predicate, truthy, value) => ifElse(predicate, truthy, always(value), value));
-  let not = __curry__((b) => !(b));
-  let flip = __curry__((f, b, a) => f(a, b));
+  let complement = (fn => x => !(fn(x)));
+  let always = (a => b => a);
+  let identity = (a => a);
+  let equals = (val => a => __eq__(val, a));
+  let notEquals = (val => a => !__eq__(val, a));
+  let ifElse = (predicate => truthy => falsy => value => (predicate(value) ? truthy(value) : falsy(value)));
+  let when = (predicate => truthy => value => ifElse(predicate)(truthy)(always(value))(value));
+  let not = (b => !(b));
+  let flip = (f => b => a => f(a)(b));
   const nativeMemoize = (fn) => {
     let cache = {};
     return (a) => {
@@ -127,7 +123,7 @@
       return cache[key]
     }
   };
-  let memoize = __curry__((fn) => nativeMemoize(fn));
+  let memoize = (fn => nativeMemoize(fn));
   const nativeMemoize2 = (fn) => {
     let cache = {};
     return __curry__((a, b) => {
@@ -138,7 +134,7 @@
       return cache[key]
     })
   };
-  let memoize2 = __curry__((fn) => nativeMemoize2(fn));
+  let memoize2 = (fn => nativeMemoize2((a, b) => fn(a)(b)));
   const nativeMemoize3 = (fn) => {
     let cache = {};
     return __curry__((a, b, c) => {
@@ -149,30 +145,30 @@
       return cache[key]
     })
   };
-  let memoize3 = __curry__((fn) => nativeMemoize3(fn));
+  let memoize3 = (fn => nativeMemoize3(fn));
   var Fun = { complement, always, identity, equals, notEquals, ifElse, when, not, flip, memoize, memoize2, memoize3 };
 
   // file: /opt/hostedtoolcache/node/14.16.1/x64/lib/node_modules/@madlib-lang/madlib/node_modules/binary-install/bin/prelude/__internal__/Functor.mad
 
   window.Functor = {};
-  __once__(() => __curry__((_P_) => Functor_t97.map(always(_P_))));
+  __once__(() => (_P_ => Functor_t97.map(always(_P_))));
 
   // file: /opt/hostedtoolcache/node/14.16.1/x64/lib/node_modules/@madlib-lang/madlib/node_modules/binary-install/bin/prelude/__internal__/Applicative.mad
 
   window.Applicative = {};
-  __once__(() => __curry__((a, b) => Applicative_h111.ap(Functor_h111.map(always, a), b)));
+  __once__(() => (a => b => Applicative_h111.ap(Functor_h111.map(always)(a))(b)));
 
   // file: /opt/hostedtoolcache/node/14.16.1/x64/lib/node_modules/@madlib-lang/madlib/node_modules/binary-install/bin/prelude/__internal__/Monad.mad
 
   window.Monad = {};
-  __once__(() => __curry__((b, a) => Monad_b131.chain(__curry__((_) => b), a)));
+  __once__(() => (b => a => Monad_b131.chain((_ => b))(a)));
 
   // file: /opt/hostedtoolcache/node/14.16.1/x64/lib/node_modules/@madlib-lang/madlib/node_modules/binary-install/bin/prelude/__internal__/Maybe.mad
 
-  let Just = __curry__((a) => ({ __constructor: "Just", __args: [ a ] }));
+  let Just = (a => ({ __constructor: "Just", __args: [ a ] }));
   let Nothing = ({ __constructor: "Nothing", __args: [  ] });
   Functor['Maybe'] = {};
-  Functor['Maybe']['map'] = __curry__((f, __x__) => ((__x__) => {
+  Functor['Maybe']['map'] = (f => __x__ => ((__x__) => {
     if (__x__.__constructor === "Just" && true) {
       let x = __x__.__args[0];
       return Just(f(x));
@@ -182,11 +178,12 @@
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(__x__));
   Applicative['Maybe'] = {};
-  Applicative['Maybe']['ap'] = __curry__((mf, mx) => ((__x__) => {
+  Applicative['Maybe']['ap'] = (mf => mx => ((__x__) => {
     if (__x__.length === 2 && __x__[0].__constructor === "Just" && true && __x__[1].__constructor === "Just" && true) {
       let [{ __args: [f]},{ __args: [x]}] = __x__;
       return Applicative.Maybe.pure(f(x));
@@ -197,7 +194,7 @@
   })(([mf, mx])));
   Applicative['Maybe']['pure'] = Just;
   Monad['Maybe'] = {};
-  Monad['Maybe']['chain'] = __curry__((f, m) => ((__x__) => {
+  Monad['Maybe']['chain'] = (f => m => ((__x__) => {
     if (__x__.__constructor === "Just" && true) {
       let x = __x__.__args[0];
       return f(x);
@@ -207,12 +204,13 @@
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(m));
   Monad['Maybe']['of'] = Applicative.Maybe.pure;
   Show['Maybe'] = {};
-  let __ShowMaybeshow = __once__(() => __curry__((__x__) => ((__x__) => {
+  let __ShowMaybeshow = __once__(() => (__x__ => ((__x__) => {
     if (__x__.__constructor === "Just" && true) {
       let a = __x__.__args[0];
       return "Just " + Show_c210.show(a);
@@ -222,6 +220,7 @@
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(__x__)));
@@ -229,7 +228,7 @@
     window.Show_c210 = Show_c210;
     return __ShowMaybeshow();
   };
-  let fromMaybe = __curry__((or, __x__) => ((__x__) => {
+  let fromMaybe = (or => __x__ => ((__x__) => {
     if (__x__.__constructor === "Just" && true) {
       let a = __x__.__args[0];
       return a;
@@ -239,18 +238,7 @@
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
-      throw 'non exhaustive patterns!';
-    }
-  })(__x__));
-  __curry__((__x__) => ((__x__) => {
-    if (__x__.__constructor === "Just" && true) {
-      return true;
-    }
-    else if (__x__.__constructor === "Nothing") {
-      return false;
-    }
-    else {
-      console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(__x__));
@@ -262,29 +250,12 @@
   // file: /opt/hostedtoolcache/node/14.16.1/x64/lib/node_modules/@madlib-lang/madlib/node_modules/binary-install/bin/prelude/__internal__/Number.mad
 
   Show['Number'] = {};
-  Show['Number']['show'] = __curry__((x) => new Number(x).toString());
+  Show['Number']['show'] = (x => new Number(x).toString());
   Read['Number'] = {};
-  Read['Number']['read'] = __curry__((x) => {
+  Read['Number']['read'] = (x => {
       const result = parseFloat(x);
       return isNaN(result) ? Nothing : Just(result)
     });
-  __curry__((str) => {
-    const n = parseFloat(str);
-    return isNaN(n) ? Nothing : Just(n)
-  });
-  __curry__((a, x) => {
-    const n = x.toFixed(a);
-    return isNaN(n) ? "0" : n
-  });
-  __curry__((a, b) => {
-    const out = [];
-    let x = a;
-    while (x < b) {
-      out.push(x);
-      x += 1;
-    }
-    return out
-  });
 
   // file: /opt/hostedtoolcache/node/14.16.1/x64/lib/node_modules/@madlib-lang/madlib/node_modules/binary-install/bin/prelude/__internal__/Semigroup.mad
   window.Semigroup = {};
@@ -296,41 +267,23 @@
   // file: /opt/hostedtoolcache/node/14.16.1/x64/lib/node_modules/@madlib-lang/madlib/node_modules/binary-install/bin/prelude/__internal__/String.mad
 
   Semigroup['String'] = {};
-  Semigroup['String']['assoc'] = __curry__((a, b) => a + b);
+  Semigroup['String']['assoc'] = (a => b => a + b);
   Monoid['String'] = {};
-  Monoid['String']['mappend'] = __curry__((a, b) => a + b);
+  Monoid['String']['mappend'] = (a => b => a + b);
   Monoid['String']['mempty'] = "";
   Show['String'] = {};
-  Show['String']['show'] = __curry__((a) => a);
-  __curry__((regex, replacing, input) => input.replace(new RegExp(regex), replacing));
-  let split = __curry__((separator, str) => str.split(separator));
+  Show['String']['show'] = (a => a);
+  let split = (separator => str => str.split(separator));
   let lines = split("\n");
-  __curry__((f, s) => s.split("").map(f).join(""));
-  __curry__((s) => !s);
-  let nthChar = __curry__((n, s) => {
-    const c = s[n];
-    return !!c ? Just(c) : Nothing
-  });
-  nthChar(0);
-  __curry__((n, s) => s.substr(n));
-  __curry__((s) => {
-    if (s.length !== 1) {
-      return false
-    }
-
-    return RegExp(/^\p{L}/,'u').test(s)
-  });
-  let len$2 = __curry__((s) => s.length);
-  __curry__((s) => (!__eq__(len$2(s), 1) ? false : __eq__(s, "0") || __eq__(s, "1") || __eq__(s, "2") || __eq__(s, "3") || __eq__(s, "4") || __eq__(s, "5") || __eq__(s, "6") || __eq__(s, "7") || __eq__(s, "8") || __eq__(s, "9")));
 
   // file: /opt/hostedtoolcache/node/14.16.1/x64/lib/node_modules/@madlib-lang/madlib/node_modules/binary-install/bin/prelude/__internal__/Compare.mad
   window.Comparable = {};
   Comparable['Number'] = {};
-  Comparable['Number']['compare'] = __curry__((a, b) => (a > b ? MORE : (__eq__(a, b) ? EQUAL : LESS)));
+  Comparable['Number']['compare'] = (a => b => (a > b ? MORE : (__eq__(a, b) ? EQUAL : LESS)));
   Comparable['String'] = {};
-  Comparable['String']['compare'] = __curry__((a, b) => a > b ? MORE : a == b ? EQUAL : LESS);
+  Comparable['String']['compare'] = (a => b => a > b ? MORE : a == b ? EQUAL : LESS);
   Comparable['Boolean'] = {};
-  Comparable['Boolean']['compare'] = __curry__((a, b) => ((__x__) => {
+  Comparable['Boolean']['compare'] = (a => b => ((__x__) => {
     if (__x__.length === 2 && __x__[0] === true && __x__[1] === false) {
       return MORE;
     }
@@ -348,27 +301,27 @@
   // file: /opt/hostedtoolcache/node/14.16.1/x64/lib/node_modules/@madlib-lang/madlib/node_modules/binary-install/bin/prelude/__internal__/List.mad
 
   Functor['List'] = {};
-  Functor['List']['map'] = __curry__((f, xs) => xs.map((x) => f(x)));
+  Functor['List']['map'] = (f => xs => xs.map((x) => f(x)));
   Applicative['List'] = {};
-  Applicative['List']['ap'] = __curry__((mf, ma) => __curry__((_P_) => flatten(Functor.List.map(__curry__((f) => Functor.List.map(f, ma)))(_P_)))(mf));
-  Applicative['List']['pure'] = __curry__((x) => ([x]));
+  Applicative['List']['ap'] = (mf => ma => (_P_ => flatten(Functor.List.map((f => Functor.List.map(f)(ma)))(_P_)))(mf));
+  Applicative['List']['pure'] = (x => ([x]));
   Monad['List'] = {};
-  Monad['List']['chain'] = __curry__((f, xs) => __curry__((_P_) => flatten(Functor.List.map(f)(_P_)))(xs));
+  Monad['List']['chain'] = (f => xs => (_P_ => flatten(Functor.List.map(f)(_P_)))(xs));
   Monad['List']['of'] = Applicative.List.pure;
   Semigroup['List'] = {};
-  Semigroup['List']['assoc'] = __curry__((xs1, xs2) => xs1.concat(xs2));
+  Semigroup['List']['assoc'] = (xs1 => xs2 => xs1.concat(xs2));
   Monoid['List'] = {};
   Monoid['List']['mappend'] = Semigroup.List.assoc;
   Monoid['List']['mempty'] = ([]);
   Show['List'] = {};
-  let __ShowListshow = __once__(() => __curry__((_P_) => __curry__((x) => `[${x}]`)(reduceL(Monoid.String.mappend, "")(intercalate(", ")(Functor.List.map(Show_a468.show)(_P_))))));
-  Show['List']['show'] = (Show_a468) => {
-    window.Show_a468 = Show_a468;
+  let __ShowListshow = __once__(() => (_P_ => (x => `[${x}]`)(reduceL(Monoid.String.mappend)("")(intercalate(", ")(Functor.List.map(Show_d471.show)(_P_))))));
+  Show['List']['show'] = (Show_d471) => {
+    window.Show_d471 = Show_d471;
     return __ShowListshow();
   };
   let singleton = Applicative.List.pure;
-  let unlines = __curry__((_P_) => reduce(Monoid.String.mappend, "")(intercalate("\n")(_P_)));
-  let intercalate = __curry__((a, xs) => ((__x__) => {
+  let unlines = (_P_ => reduce(Monoid.String.mappend)("")(intercalate("\n")(_P_)));
+  let intercalate = (a => xs => ((__x__) => {
     if (__x__.length === 0) {
       return ([]);
     }
@@ -382,45 +335,46 @@
     }
     else if (__x__.length >= 2 && true && true) {
       let [one,...rest] = __x__;
-      return ([one, a,  ...intercalate(a, rest)]);
+      return ([one, a,  ...intercalate(a)(rest)]);
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(xs));
-  let join = (Show_p509) => (Show_o508) => {
-    window.Show_o508 = Show_o508;
-    window.Show_p509 = Show_p509;
+  let join = (Show_s512) => (Show_r511) => {
+    window.Show_r511 = Show_r511;
+    window.Show_s512 = Show_s512;
 
     return join__ND__()
   };
-  let join__ND__ = __once__(() => __curry__((a, xs) => __curry__((_P_) => reduce(Monoid.String.mappend, "")(intercalate(Show_o508.show(a))(Functor.List.map(Show_p509.show)(_P_))))(xs)));
-  let mapWithIndex = __curry__((f, xs) => xs.map(f));
-  let concat = __curry__((xs1, xs2) => xs1.concat(xs2));
-  let append = __curry__((v, xs) => [...xs, v]);
-  let last = __curry__((xs) => {
+  let join__ND__ = __once__(() => (a => xs => (_P_ => reduce(Monoid.String.mappend)("")(intercalate(Show_r511.show(a))(Functor.List.map(Show_s512.show)(_P_))))(xs)));
+  let mapWithIndex = (f => xs => xs.map((a, b) => f(a)(b)));
+  let concat = (xs1 => xs2 => xs1.concat(xs2));
+  let append = (v => xs => [...xs, v]);
+  let last = (xs => {
     const item = xs.slice(-1)[0];
     return item ? Just(item) : Nothing;
   });
-  let first = __curry__((xs) => {
+  let first = (xs => {
     const item = xs[0];
     return item ? Just(item) : Nothing;
   });
-  let init$1 = __curry__((xs) => xs.slice(0, -1));
-  let tail = __curry__((xs) => xs.slice(1));
-  let nth = __curry__((i, xs) => {
+  let init$1 = (xs => xs.slice(0, -1));
+  let tail = (xs => xs.slice(1));
+  let nth = (i => xs => {
     const x = xs[i];
     return x === undefined
       ? Nothing
       : Just(x);
   });
-  let reduceR = __curry__((f, initial, xs) => xs.reduceRight(f, initial));
-  let reduceL = __curry__((f, initial, xs) => xs.reduce(f, initial));
+  let reduceR = (f => initial => xs => xs.reduceRight((a, b) => f(a)(b), initial));
+  let reduceL = (f => initial => xs => xs.reduce((a, b) => f(a)(b), initial));
   let reduce = reduceL;
-  let filter = __curry__((predicate, xs) => xs.filter(predicate));
-  let reject = __curry__((predicate, xs) => xs.filter(Fun.complement(predicate)));
-  let find = __curry__((predicate, xs) => {
+  let filter = (predicate => xs => xs.filter(predicate));
+  let reject = (predicate => xs => xs.filter(Fun.complement(predicate)));
+  let find = (predicate => xs => {
     const found = xs.find(predicate);
     if (found === undefined) {
       return Nothing
@@ -429,10 +383,10 @@
       return Just(found)
     }
   });
-  let len$1 = __curry__((xs) => xs.length);
-  let slice = __curry__((start, end, xs) => xs.slice(start, end));
-  let isEmpty = __curry__((xs) => __eq__(len$1(xs), 0));
-  let uniqueBy = __curry__((f) => reduce(__curry__((result, elem) => ((__x__) => {
+  let len$1 = (xs => xs.length);
+  let slice = (start => end => xs => xs.slice(start, end));
+  let isEmpty = (xs => __eq__(len$1(xs), 0));
+  let uniqueBy = (f => reduce((result => elem => ((__x__) => {
     if (__x__.__constructor === "Just" && true) {
       return result;
     }
@@ -441,33 +395,34 @@
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
-  })(find(f(elem), result))), ([])));
-  let sortBy = __curry__((fn, xs) => xs.sort(fn));
-  let sort$1 = (Comparable_e654) => {
-    window.Comparable_e654 = Comparable_e654;
+  })(find(f(elem))(result))))(([])));
+  let sortBy = (fn => xs => xs.sort((a, b) => fn(a)(b)));
+  let sort$1 = (Comparable_h657) => {
+    window.Comparable_h657 = Comparable_h657;
 
     return sort__ND__()
   };
-  let sort__ND__ = __once__(() => sortBy(Comparable_e654.compare));
-  let sortAsc = (Comparable_j659) => {
-    window.Comparable_j659 = Comparable_j659;
+  let sort__ND__ = __once__(() => sortBy(Comparable_h657.compare));
+  let sortAsc = (Comparable_m662) => {
+    window.Comparable_m662 = Comparable_m662;
 
     return sortAsc__ND__()
   };
-  let sortAsc__ND__ = __once__(() => sort$1(Comparable_j659));
-  let sortDesc = (Comparable_m662) => {
-    window.Comparable_m662 = Comparable_m662;
+  let sortAsc__ND__ = __once__(() => sort$1(Comparable_m662));
+  let sortDesc = (Comparable_p665) => {
+    window.Comparable_p665 = Comparable_p665;
 
     return sortDesc__ND__()
   };
-  let sortDesc__ND__ = __once__(() => sortBy(__curry__((a, b) => Comparable_m662.compare(a, b) * -1)));
-  let flatten = reduceL(concat, ([]));
-  let zip = __curry__((as, bs) => ((__x__) => {
+  let sortDesc__ND__ = __once__(() => sortBy((a => b => Comparable_p665.compare(a)(b) * -1)));
+  let flatten = reduceL(concat)(([]));
+  let zip = (as => bs => ((__x__) => {
     if (__x__.length === 2 && __x__[0].length >= 2 && true && true && __x__[1].length >= 2 && true && true) {
       let [[a, ...aa],[b, ...bb]] = __x__;
-      return Monoid.List.mappend(([([a, b])]), zip(aa, bb));
+      return Monoid.List.mappend(([([a, b])]))(zip(aa)(bb));
     }
     else if (__x__.length === 2 && __x__[0].length === 1 && true && __x__[1].length === 1 && true) {
       let [[a],[b]] = __x__;
@@ -478,13 +433,14 @@
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(([as, bs])));
-  let includes = __curry__((x, xs) => xs.includes(x));
-  let drop = __curry__((amount, xs) => slice(amount, len$1(xs) - amount - 1, xs));
-  let dropLast = __curry__((amount, xs) => slice(0, len$1(xs) - amount - 1, xs));
-  let dropWhile = __curry__((pred, xs) => {
+  let includes = (x => xs => xs.includes(x));
+  let drop = (amount => xs => slice(amount)(len$1(xs) - amount - 1)(xs));
+  let dropLast = (amount => xs => slice(0)(len$1(xs) - amount - 1)(xs));
+  let dropWhile = (pred => xs => {
     const n = xs.length;
     let i = 0;
 
@@ -500,255 +456,155 @@
 
   // file: /opt/hostedtoolcache/node/14.16.1/x64/lib/node_modules/@madlib-lang/madlib/node_modules/binary-install/bin/prelude/__internal__/Wish.mad
 
-  let Wish = __curry__((a) => ({ __constructor: "Wish", __args: [ a ] }));
+  let Wish = (a => ({ __constructor: "Wish", __args: [ a ] }));
   Functor['Wish'] = {};
-  Functor['Wish']['map'] = __curry__((f, m) => Wish(__curry__((badCB, goodCB) => ((__x__) => {
+  Functor['Wish']['map'] = (f => m => Wish((badCB => goodCB => ((__x__) => {
     if (__x__.__constructor === "Wish" && true) {
       let run = __x__.__args[0];
-      return run(badCB, __curry__((x) => goodCB(f(x))));
+      return run(badCB)((x => goodCB(f(x))));
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(m))));
   Applicative['Wish'] = {};
-  Applicative['Wish']['ap'] = __curry__((mf, m) => Wish(__curry__((badCB, goodCB) => ((__x__) => {
+  Applicative['Wish']['ap'] = (mf => m => Wish((badCB => goodCB => ((__x__) => {
     if (__x__.length === 2 && __x__[0].__constructor === "Wish" && true && __x__[1].__constructor === "Wish" && true) {
       let [{ __args: [runMF]},{ __args: [runM]}] = __x__;
-      return runM(badCB, __curry__((x) => runMF(badCB, __curry__((f) => goodCB(f(x))))));
+      return runM(badCB)((x => runMF(badCB)((f => goodCB(f(x))))));
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(([mf, m])))));
-  Applicative['Wish']['pure'] = __curry__((a) => Wish(__curry__((_, goodCB) => goodCB(a))));
+  Applicative['Wish']['pure'] = (a => Wish((_ => goodCB => goodCB(a))));
   Monad['Wish'] = {};
-  Monad['Wish']['chain'] = __curry__((f, m) => Wish(__curry__((badCB, goodCB) => ((__x__) => {
+  Monad['Wish']['chain'] = (f => m => Wish((badCB => goodCB => ((__x__) => {
     if (__x__.__constructor === "Wish" && true) {
       let run = __x__.__args[0];
-      return run(badCB, __curry__((x) => ((__x__) => {
+      return run(badCB)((x => ((__x__) => {
     if (__x__.__constructor === "Wish" && true) {
       let r = __x__.__args[0];
-      return r(badCB, goodCB);
+      return r(badCB)(goodCB);
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(f(x))));
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(m))));
   Monad['Wish']['of'] = Applicative.Wish.pure;
-  __curry__((f, m) => Wish(__curry__((badCB, goodCB) => ((__x__) => {
-    if (__x__.__constructor === "Wish" && true) {
-      let run = __x__.__args[0];
-      return run(__curry__((x) => badCB(f(x))), goodCB);
-    }
-    else {
-      console.log('non exhaustive patterns for value: ', __x__.toString()); 
-      throw 'non exhaustive patterns!';
-    }
-  })(m))));
-  __curry__((f, m) => Wish(__curry__((badCB, goodCB) => ((__x__) => {
-    if (__x__.__constructor === "Wish" && true) {
-      let run = __x__.__args[0];
-      return run(__curry__((x) => ((__x__) => {
-    if (__x__.__constructor === "Wish" && true) {
-      let r = __x__.__args[0];
-      return r(badCB, goodCB);
-    }
-    else {
-      console.log('non exhaustive patterns for value: ', __x__.toString()); 
-      throw 'non exhaustive patterns!';
-    }
-  })(f(x))), goodCB);
-    }
-    else {
-      console.log('non exhaustive patterns for value: ', __x__.toString()); 
-      throw 'non exhaustive patterns!';
-    }
-  })(m))));
-  __curry__((a) => Wish(__curry__((_, goodCB) => goodCB(a))));
-  __curry__((e) => Wish(__curry__((badCB, _) => badCB(e))));
-  let getWishFn = __curry__((__x__) => ((__x__) => {
-    if (__x__.__constructor === "Wish" && true) {
-      let run = __x__.__args[0];
-      return run;
-    }
-    else {
-      console.log('non exhaustive patterns for value: ', __x__.toString()); 
-      throw 'non exhaustive patterns!';
-    }
-  })(__x__));
-  __curry__((wishes) => Wish(__curry__((badCB, goodCB) => {
-      const l = wishes.length;
-      let ko = false;
-      let ok = 0;
-      const out = new Array(l);
-      const next = j => (j === l && goodCB(out));
-      const fork = (w, j) => (getWishFn(w)(
-        e => ko || (badCB(e), ko = true),
-        x => ko || (out[j] = x, next(++ok))
-      ));
-      wishes.forEach(fork);
-
-      if (l === 0) {
-        goodCB([]);
-      }
-    })));
-  let fulfill = __curry__((badCB, goodCB, m) => {
+  let fulfill = (badCB => goodCB => m => {
       ((__x__) => {
     if (__x__.__constructor === "Wish" && true) {
       let run = __x__.__args[0];
-      return setTimeout(() => run(badCB, goodCB), 0);  }
+      return setTimeout(() => run(badCB)(goodCB), 0);  }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(m);
       return ({ __constructor: "Unit", __args: [] });
   });
-  __curry__((time, a) => Wish(__curry__((_, goodCB) => {
-    setTimeout(() => goodCB(a), time);
-  })));
 
   // file: /opt/hostedtoolcache/node/14.16.1/x64/lib/node_modules/@madlib-lang/madlib/node_modules/binary-install/bin/prelude/__internal__/Tuple.mad
 
   Show['Tuple_2'] = {};
-  let __ShowTuple_2show = __once__(() => __curry__((__x__) => ((__x__) => {
+  let __ShowTuple_2show = __once__(() => (__x__ => ((__x__) => {
     if (__x__.length === 2 && true && true) {
       let [a,b] = __x__;
-      return "<" + Show_g1020.show(a) + ", " + Show_h1021.show(b) + ">";
+      return "<" + Show_j1023.show(a) + ", " + Show_k1024.show(b) + ">";
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(__x__)));
-  Show['Tuple_2']['show'] = (Show_h1021) => (Show_g1020) => {
-    window.Show_g1020 = Show_g1020;
-    window.Show_h1021 = Show_h1021;
+  Show['Tuple_2']['show'] = (Show_k1024) => (Show_j1023) => {
+    window.Show_j1023 = Show_j1023;
+    window.Show_k1024 = Show_k1024;
     return __ShowTuple_2show();
   };
   Show['Tuple_3'] = {};
-  let __ShowTuple_3show = __once__(() => __curry__((__x__) => ((__x__) => {
+  let __ShowTuple_3show = __once__(() => (__x__ => ((__x__) => {
     if (__x__.length === 3 && true && true && true) {
       let [a,b,c] = __x__;
-      return "<" + Show_z1039.show(a) + ", " + Show_a1040.show(b) + ", " + Show_b1041.show(c) + ">";
+      return "<" + Show_c1042.show(a) + ", " + Show_d1043.show(b) + ", " + Show_e1044.show(c) + ">";
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(__x__)));
-  Show['Tuple_3']['show'] = (Show_b1041) => (Show_a1040) => (Show_z1039) => {
-    window.Show_z1039 = Show_z1039;
-    window.Show_a1040 = Show_a1040;
-    window.Show_b1041 = Show_b1041;
+  Show['Tuple_3']['show'] = (Show_e1044) => (Show_d1043) => (Show_c1042) => {
+    window.Show_c1042 = Show_c1042;
+    window.Show_d1043 = Show_d1043;
+    window.Show_e1044 = Show_e1044;
     return __ShowTuple_3show();
   };
   Show['Tuple_4'] = {};
-  let __ShowTuple_4show = __once__(() => __curry__((__x__) => ((__x__) => {
+  let __ShowTuple_4show = __once__(() => (__x__ => ((__x__) => {
     if (__x__.length === 4 && true && true && true && true) {
       let [a,b,c,d] = __x__;
-      return "<" + Show_a1066.show(a) + ", " + Show_b1067.show(b) + ", " + Show_c1068.show(c) + ", " + Show_d1069.show(d) + ">";
+      return "<" + Show_d1069.show(a) + ", " + Show_e1070.show(b) + ", " + Show_f1071.show(c) + ", " + Show_g1072.show(d) + ">";
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(__x__)));
-  Show['Tuple_4']['show'] = (Show_d1069) => (Show_c1068) => (Show_b1067) => (Show_a1066) => {
-    window.Show_a1066 = Show_a1066;
-    window.Show_b1067 = Show_b1067;
-    window.Show_c1068 = Show_c1068;
+  Show['Tuple_4']['show'] = (Show_g1072) => (Show_f1071) => (Show_e1070) => (Show_d1069) => {
     window.Show_d1069 = Show_d1069;
+    window.Show_e1070 = Show_e1070;
+    window.Show_f1071 = Show_f1071;
+    window.Show_g1072 = Show_g1072;
     return __ShowTuple_4show();
   };
-  let fst = __curry__((tuple) => ((__x__) => {
+  let fst = (tuple => ((__x__) => {
     if (__x__.length === 2 && true && true) {
       let [a,] = __x__;
       return a;
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(tuple));
-  let snd = __curry__((tuple) => ((__x__) => {
+  let snd = (tuple => ((__x__) => {
     if (__x__.length === 2 && true && true) {
       let [,b] = __x__;
       return b;
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(tuple));
   var T = { fst, snd };
 
-  // file: /opt/hostedtoolcache/node/14.16.1/x64/lib/node_modules/@madlib-lang/madlib/node_modules/binary-install/bin/prelude/__internal__/IO.mad
-  __curry__((a) => { console.log(a); return a; });
-  __curry__((v, a) => { console.log(v, a); return a; });
-  __curry__((e) => { console.log(e); return e; });
-  __curry__((w) => { console.warn(w); return w; });
-  __curry__((a) => { console.log(util__default['default'].inspect(a, {showHidden: false, depth: null})); return a; });
-  const stringify = (x) => {
-    if (typeof x === "object") {
-      if (Array.isArray(x)) {
-        const items = x.map(stringify).reduce((acc, xx) => acc + ",\n    " + xx);
-        return items.length < 80
-          ? `[${items.replace("\n    ", " ")}]`
-          : `[\n    ${items}\n]`
-      }
-      else {
-        if (x.__constructor) {
-          return x.__constructor + " " + x.__args.map(stringify).reduce((acc, xx) => acc + " " + xx, "")
-        }
-        else {
-          const items = Object
-            .keys(x)
-            .map((k) => k + ": " + x[k])
-            .reduce((acc, xx) => acc + ",\n    " + xx, "");
-
-          return `{\n  ${items}\n}`
-        }
-      }
-    } else return JSON.stringify(x)
-  };
-  __curry__((a) => {
-    console.log(stringify(a));
-    return a
-  });
-  __curry__((rows, a) => {
-    const xSpaces = x => new Array(x).fill(' ').join('');
-
-    const longestId = rows.map(x => x.id.length).reduce((a, b) => Math.max(a, b), 0);
-
-    const readyRows = rows
-      .map(x => ({ ...x, id: x.id + xSpaces(longestId - x.id.length) }))
-      .reduce((rows, row) => {
-        return {
-          ...rows,
-          [row.id]: row.cols.reduce((o, [colName, colValue]) => { o[colName] = colValue; return o; }, {})
-        }
-      }, {});
-    console.table(readyRows);
-    return a
-  });
-
   // file: /opt/hostedtoolcache/node/14.16.1/x64/lib/node_modules/@madlib-lang/madlib/node_modules/binary-install/bin/prelude/__internal__/Either.mad
 
-  let Left = __curry__((a) => ({ __constructor: "Left", __args: [ a ] }));
-  let Right = __curry__((a) => ({ __constructor: "Right", __args: [ a ] }));
+  let Left = (a => ({ __constructor: "Left", __args: [ a ] }));
+  let Right = (a => ({ __constructor: "Right", __args: [ a ] }));
   Functor['Either'] = {};
-  Functor['Either']['map'] = __curry__((f, __x__) => ((__x__) => {
+  Functor['Either']['map'] = (f => __x__ => ((__x__) => {
     if (__x__.__constructor === "Right" && true) {
       let a = __x__.__args[0];
       return Right(f(a));
@@ -759,27 +615,29 @@
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(__x__));
   Applicative['Either'] = {};
-  Applicative['Either']['ap'] = __curry__((mf, m) => ((__x__) => {
+  Applicative['Either']['ap'] = (mf => m => ((__x__) => {
     if (__x__.__constructor === "Left" && true) {
       let e = __x__.__args[0];
       return Left(e);
     }
     else if (__x__.__constructor === "Right" && true) {
       let f = __x__.__args[0];
-      return Functor.Either.map(f, m);
+      return Functor.Either.map(f)(m);
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(mf));
   Applicative['Either']['pure'] = Right;
   Monad['Either'] = {};
-  Monad['Either']['chain'] = __curry__((f, __x__) => ((__x__) => {
+  Monad['Either']['chain'] = (f => __x__ => ((__x__) => {
     if (__x__.__constructor === "Right" && true) {
       let a = __x__.__args[0];
       return f(a);
@@ -790,46 +648,34 @@
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(__x__));
   Monad['Either']['of'] = Applicative.Either.pure;
   Show['Either'] = {};
-  let __ShowEithershow = __once__(() => __curry__((__x__) => ((__x__) => {
+  let __ShowEithershow = __once__(() => (__x__ => ((__x__) => {
     if (__x__.__constructor === "Right" && true) {
       let a = __x__.__args[0];
-      return "Right " + Show_q1238.show(a);
+      return "Right " + Show_t1241.show(a);
     }
     else if (__x__.__constructor === "Left" && true) {
       let e = __x__.__args[0];
-      return "Left " + Show_t1241.show(e);
+      return "Left " + Show_w1244.show(e);
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(__x__)));
-  Show['Either']['show'] = (Show_q1238) => (Show_t1241) => {
+  Show['Either']['show'] = (Show_t1241) => (Show_w1244) => {
+    window.Show_w1244 = Show_w1244;
     window.Show_t1241 = Show_t1241;
-    window.Show_q1238 = Show_q1238;
     return __ShowEithershow();
   };
   let mapRight = Functor.Either.map;
-  __curry__((f, m) => ((__x__) => {
-    if (__x__.__constructor === "Right" && true) {
-      let a = __x__.__args[0];
-      return Right(a);
-    }
-    else if (__x__.__constructor === "Left" && true) {
-      let e = __x__.__args[0];
-      return Left(f(e));
-    }
-    else {
-      console.log('non exhaustive patterns for value: ', __x__.toString()); 
-      throw 'non exhaustive patterns!';
-    }
-  })(m));
-  let isLeft = __curry__((either) => ((__x__) => {
+  let isLeft = (either => ((__x__) => {
     if (__x__.__constructor === "Left" && true) {
       return true;
     }
@@ -837,15 +683,7 @@
       return false;
     }
   })(either));
-  __curry__((either) => ((__x__) => {
-    if (__x__.__constructor === "Right" && true) {
-      return true;
-    }
-    else {
-      return false;
-    }
-  })(either));
-  let fromRight = __curry__((a, either) => ((__x__) => {
+  let fromRight = (a => either => ((__x__) => {
     if (__x__.__constructor === "Right" && true) {
       let x = __x__.__args[0];
       return x;
@@ -857,96 +695,105 @@
 
   // file: /opt/hostedtoolcache/node/14.16.1/x64/lib/node_modules/@madlib-lang/madlib/node_modules/binary-install/bin/prelude/__internal__/Dictionary.mad
 
-  let Dictionary = __curry__((a) => ({ __constructor: "Dictionary", __args: [ a ] }));
+  let Dictionary = (a => ({ __constructor: "Dictionary", __args: [ a ] }));
   Functor['Dictionary'] = {};
-  Functor['Dictionary']['map'] = __curry__((fn, __x__) => ((__x__) => {
+  Functor['Dictionary']['map'] = (fn => __x__ => ((__x__) => {
     if (__x__.__constructor === "Dictionary" && true) {
       let items = __x__.__args[0];
-      return fromList(Functor.List.map(__curry__((i) => ([T.fst(i), fn(T.snd(i))])), items));
+      return fromList(Functor.List.map((i => ([T.fst(i), fn(T.snd(i))])))(items));
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(__x__));
-  let fromList = __curry__((_P_) => Dictionary(L.uniqueBy(__curry__((a, b) => __eq__(T.fst(a), T.fst(b))))(_P_)));
+  let fromList = (_P_ => Dictionary(L.uniqueBy((a => b => __eq__(T.fst(a), T.fst(b))))(_P_)));
   let empty = fromList(([]));
-  let insert = __curry__((k, v, m) => ((__x__) => {
+  let insert = (k => v => m => ((__x__) => {
     if (__x__.__constructor === "Dictionary" && true) {
       let items = __x__.__args[0];
-      return Dictionary(L.append(([k, v]))(L.reject(__curry__((item) => ((__x__) => {
+      return Dictionary(L.append(([k, v]))(L.reject((item => ((__x__) => {
     if (__x__.length === 2 && true && true) {
       let [kk,] = __x__;
       return __eq__(kk, k);
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
-  })(item)), items)));
+  })(item)))(items)));
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(m));
-  let get = __curry__((k, __x__) => ((__x__) => {
+  let get = (k => __x__ => ((__x__) => {
     if (__x__.__constructor === "Dictionary" && true) {
       let items = __x__.__args[0];
-      return __curry__((_P_) => Functor.Maybe.map(T.snd)(L.find(__curry__((item) => ((__x__) => {
+      return (_P_ => Functor.Maybe.map(T.snd)(L.find((item => ((__x__) => {
     if (__x__.length === 2 && true && true) {
       let [kk,] = __x__;
       return __eq__(k, kk);
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(item)))(_P_)))(items);
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(__x__));
-  let keys = __curry__((m) => ((__x__) => {
+  let keys = (m => ((__x__) => {
     if (__x__.__constructor === "Dictionary" && true) {
       let items = __x__.__args[0];
-      return Functor.List.map(T.fst, items);
+      return Functor.List.map(T.fst)(items);
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(m));
-  let values = __curry__((m) => ((__x__) => {
+  let values = (m => ((__x__) => {
     if (__x__.__constructor === "Dictionary" && true) {
       let items = __x__.__args[0];
-      return Functor.List.map(T.snd, items);
+      return Functor.List.map(T.snd)(items);
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(m));
-  let len = __curry__((m) => L.len(keys(m)));
-  let mapWithKey = __curry__((fn, __x__) => ((__x__) => {
+  let len = (m => L.len(keys(m)));
+  let mapWithKey = (fn => __x__ => ((__x__) => {
     if (__x__.__constructor === "Dictionary" && true) {
       let items = __x__.__args[0];
-      return fromList(Functor.List.map(__curry__((i) => ([T.fst(i), fn(T.fst(i), T.snd(i))])), items));
+      return fromList(Functor.List.map((i => ([T.fst(i), fn(T.fst(i))(T.snd(i))])))(items));
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(__x__));
-  let merge = __curry__((a, b) => ((__x__) => {
+  let merge = (a => b => ((__x__) => {
     if (__x__.length === 2 && __x__[0].__constructor === "Dictionary" && true && __x__[1].__constructor === "Dictionary" && true) {
       let [{ __args: [itemsA]},{ __args: [itemsB]}] = __x__;
-      return fromList(L.concat(itemsA, itemsB));
+      return fromList(L.concat(itemsA)(itemsB));
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(([a, b])));
@@ -954,16 +801,16 @@
 
   // file: /opt/hostedtoolcache/node/14.16.1/x64/lib/node_modules/@madlib-lang/madlib/node_modules/binary-install/bin/prelude/__internal__/Json.mad
 
-  let string = __curry__((input) => typeof input === "string"
+  let string = (input => typeof input === "string"
       ? Right(input)
       : Left(`${input} is not a string`));
-  let number = __curry__((input) => typeof input === "number"
+  let number = (input => typeof input === "number"
       ? Right(input)
       : Left(`${input} is not a number`));
-  let boolean = __curry__((input) => typeof input === "boolean"
+  let boolean = (input => typeof input === "boolean"
       ? Right(input)
       : Left(`${input} is not a boolean`));
-  let dict = __curry__((parser, input) => {
+  let dict = (parser => input => {
     try {
       const keys = Object.keys(input);
       let result = D.empty;
@@ -972,7 +819,7 @@
         if (isLeft(parsed)) {
           throw parsed;
         } else {
-          result = D.insert(k, fromRight("", parsed), result);
+          result = D.insert(k)(fromRight("")(parsed))(result);
         }
       });
 
@@ -981,7 +828,7 @@
       return Left("Mapping failed!");
     }
   });
-  let list = __curry__((parser, input) => {
+  let list = (parser => input => {
     try {
       let result = [];
       input.forEach((a) => {
@@ -989,7 +836,7 @@
         if (isLeft(parsed)) {
           throw parsed;
         } else {
-          result.push(fromRight("", parsed));
+          result.push(fromRight("")(parsed));
         }
       });
       return Right(result);
@@ -997,7 +844,7 @@
       return Left("Mapping failed!");
     }
   });
-  let map1 = __curry__((fn, parser, input) => ((__x__) => {
+  let map1 = (fn => parser => input => ((__x__) => {
     if (__x__.__constructor === "Right" && true) {
       let a = __x__.__args[0];
       return Right(fn(a));
@@ -1008,13 +855,14 @@
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(parser(input)));
-  let map2 = __curry__((fn, parserA, parserB, input) => ((__x__) => {
+  let map2 = (fn => parserA => parserB => input => ((__x__) => {
     if (__x__.length === 2 && __x__[0].__constructor === "Right" && true && __x__[1].__constructor === "Right" && true) {
       let [{ __args: [a]},{ __args: [b]}] = __x__;
-      return Right(fn(a, b));
+      return Right(fn(a)(b));
     }
     else if (__x__.length === 2 && __x__[0].__constructor === "Left" && true && true) {
       let [{ __args: [e]},] = __x__;
@@ -1026,13 +874,14 @@
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(([parserA(input), parserB(input)])));
-  let map3 = __curry__((fn, parserA, parserB, parserC, input) => ((__x__) => {
+  let map3 = (fn => parserA => parserB => parserC => input => ((__x__) => {
     if (__x__.length === 3 && __x__[0].__constructor === "Right" && true && __x__[1].__constructor === "Right" && true && __x__[2].__constructor === "Right" && true) {
       let [{ __args: [a]},{ __args: [b]},{ __args: [c]}] = __x__;
-      return Right(fn(a, b, c));
+      return Right(fn(a)(b)(c));
     }
     else if (__x__.length === 3 && __x__[0].__constructor === "Left" && true && true && true) {
       let [{ __args: [e]},,] = __x__;
@@ -1048,13 +897,14 @@
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(([parserA(input), parserB(input), parserC(input)])));
-  let map4 = __curry__((fn, parserA, parserB, parserC, parserD, input) => ((__x__) => {
+  let map4 = (fn => parserA => parserB => parserC => parserD => input => ((__x__) => {
     if (__x__.length === 4 && __x__[0].__constructor === "Right" && true && __x__[1].__constructor === "Right" && true && __x__[2].__constructor === "Right" && true && __x__[3].__constructor === "Right" && true) {
       let [{ __args: [a]},{ __args: [b]},{ __args: [c]},{ __args: [d]}] = __x__;
-      return Right(fn(a, b, c, d));
+      return Right(fn(a)(b)(c)(d));
     }
     else if (__x__.length === 4 && __x__[0].__constructor === "Left" && true && true && true && true) {
       let [{ __args: [e]},,,] = __x__;
@@ -1074,13 +924,14 @@
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(([parserA(input), parserB(input), parserC(input), parserD(input)])));
-  let map5 = __curry__((fn, parserA, parserB, parserC, parserD, parserE, input) => ((__x__) => {
+  let map5 = (fn => parserA => parserB => parserC => parserD => parserE => input => ((__x__) => {
     if (__x__.length === 5 && __x__[0].__constructor === "Right" && true && __x__[1].__constructor === "Right" && true && __x__[2].__constructor === "Right" && true && __x__[3].__constructor === "Right" && true && __x__[4].__constructor === "Right" && true) {
       let [{ __args: [a]},{ __args: [b]},{ __args: [c]},{ __args: [d]},{ __args: [e]}] = __x__;
-      return Right(fn(a, b, c, d, e));
+      return Right(fn(a)(b)(c)(d)(e));
     }
     else if (__x__.length === 5 && __x__[0].__constructor === "Left" && true && true && true && true && true) {
       let [{ __args: [e]},,,,] = __x__;
@@ -1104,13 +955,14 @@
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(([parserA(input), parserB(input), parserC(input), parserD(input), parserE(input)])));
-  let map6 = __curry__((fn, parserA, parserB, parserC, parserD, parserE, parserF, input) => ((__x__) => {
+  let map6 = (fn => parserA => parserB => parserC => parserD => parserE => parserF => input => ((__x__) => {
     if (__x__.length === 6 && __x__[0].__constructor === "Right" && true && __x__[1].__constructor === "Right" && true && __x__[2].__constructor === "Right" && true && __x__[3].__constructor === "Right" && true && __x__[4].__constructor === "Right" && true && __x__[5].__constructor === "Right" && true) {
       let [{ __args: [a]},{ __args: [b]},{ __args: [c]},{ __args: [d]},{ __args: [e]},{ __args: [f]}] = __x__;
-      return Right(fn(a, b, c, d, e, f));
+      return Right(fn(a)(b)(c)(d)(e)(f));
     }
     else if (__x__.length === 6 && __x__[0].__constructor === "Left" && true && true && true && true && true && true) {
       let [{ __args: [e]},,,,,] = __x__;
@@ -1138,13 +990,14 @@
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(([parserA(input), parserB(input), parserC(input), parserD(input), parserE(input), parserF(input)])));
-  let map7 = __curry__((fn, parserA, parserB, parserC, parserD, parserE, parserF, parserG, input) => ((__x__) => {
+  let map7 = (fn => parserA => parserB => parserC => parserD => parserE => parserF => parserG => input => ((__x__) => {
     if (__x__.length === 7 && __x__[0].__constructor === "Right" && true && __x__[1].__constructor === "Right" && true && __x__[2].__constructor === "Right" && true && __x__[3].__constructor === "Right" && true && __x__[4].__constructor === "Right" && true && __x__[5].__constructor === "Right" && true && __x__[6].__constructor === "Right" && true) {
       let [{ __args: [a]},{ __args: [b]},{ __args: [c]},{ __args: [d]},{ __args: [e]},{ __args: [f]},{ __args: [g]}] = __x__;
-      return Right(fn(a, b, c, d, e, f, g));
+      return Right(fn(a)(b)(c)(d)(e)(f)(g));
     }
     else if (__x__.length === 7 && __x__[0].__constructor === "Left" && true && true && true && true && true && true && true) {
       let [{ __args: [e]},,,,,,] = __x__;
@@ -1176,23 +1029,24 @@
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(([parserA(input), parserB(input), parserC(input), parserD(input), parserE(input), parserF(input), parserG(input)])));
-  let maybe = __curry__((parser, input) => {
+  let maybe = (parser => input => {
     if (input) {
       let parsed = parser(input);
       if (isLeft(parsed)) {
         return Right(Nothing);
       }
-      return mapRight(Just, parsed);
+      return mapRight(Just)(parsed);
     } else {
       return Right(Nothing)
     }
   });
-  let lazy = __curry__((wrapped, input) => wrapped(({ __constructor: "Unit", __args: [] }), input));
-  let field = __curry__((fieldName, parser, input) => parser(input[fieldName]));
-  let parse = __curry__((parser, input) => {
+  let lazy = (wrapped => input => wrapped(({ __constructor: "Unit", __args: [] }))(input));
+  let field = (fieldName => parser => input => parser(input[fieldName]));
+  let parse = (parser => input => {
     try {
       return parser(JSON.parse(input))
     } catch(e) {
@@ -1811,32 +1665,18 @@
       destroy: updateEventListeners
   };
 
-  // file: /home/runner/work/madparser/madparser/madlib_modules/https___github_com_madlib_lang_madui_archive_master_zip/src/Main.mad
+  // file: /home/runner/work/madparser/madparser/madlib_modules/https___github_com_madlib_lang_madui_archive_refs_heads_master_zip/src/Main.mad
   let KEY_ENTER = ({ __constructor: "KEY_ENTER", __args: [  ] });
   let KEY_BACKSPACE = ({ __constructor: "KEY_BACKSPACE", __args: [  ] });
   let KEY_ANY = ({ __constructor: "KEY_ANY", __args: [  ] });
-  let AbstractEvent = __curry__((a) => ({ __constructor: "AbstractEvent", __args: [ a ] }));
-  let ClickEvent = __curry__((a) => ({ __constructor: "ClickEvent", __args: [ a ] }));
-  let InputEvent = __curry__((a) => ({ __constructor: "InputEvent", __args: [ a ] }));
-  let KeyPressEvent = __curry__((a) => ({ __constructor: "KeyPressEvent", __args: [ a ] }));
-  let UrlEvent = __curry__((a) => ({ __constructor: "UrlEvent", __args: [ a ] }));
-  __curry__((a) => ({ __constructor: "AttributeId", __args: [ a ] }));
-  let AttributeClass = __curry__((a) => ({ __constructor: "AttributeClass", __args: [ a ] }));
-  __curry__((a) => ({ __constructor: "AttributeValue", __args: [ a ] }));
-  let AttributePlaceholder = __curry__((a) => ({ __constructor: "AttributePlaceholder", __args: [ a ] }));
-  let AttributeType = __curry__((a) => ({ __constructor: "AttributeType", __args: [ a ] }));
-  __curry__((a) => ({ __constructor: "AttributeKey", __args: [ a ] }));
-  __curry__((a) => ({ __constructor: "AttributeHref", __args: [ a ] }));
-  __curry__((a) => ({ __constructor: "AttributeSrc", __args: [ a ] }));
-  __curry__((a) => ({ __constructor: "AttributeTitle", __args: [ a ] }));
-  __curry__((a) => ({ __constructor: "AttributeAlt", __args: [ a ] }));
-  __curry__((a) => ({ __constructor: "AttributeTo", __args: [ a ] }));
-  __curry__((a) => ({ __constructor: "AttributeOnClick", __args: [ a ] }));
-  __curry__((a) => ({ __constructor: "AttributeOnMouseOver", __args: [ a ] }));
-  __curry__((a) => ({ __constructor: "AttributeOnMouseOut", __args: [ a ] }));
-  __curry__((a) => ({ __constructor: "AttributeOnChange", __args: [ a ] }));
-  let AttributeOnInput = __curry__((a) => ({ __constructor: "AttributeOnInput", __args: [ a ] }));
-  __curry__((a) => ({ __constructor: "AttributeOnKeyPress", __args: [ a ] }));
+  let AbstractEvent = (a => ({ __constructor: "AbstractEvent", __args: [ a ] }));
+  let ClickEvent = (a => ({ __constructor: "ClickEvent", __args: [ a ] }));
+  let InputEvent = (a => ({ __constructor: "InputEvent", __args: [ a ] }));
+  let KeyPressEvent = (a => ({ __constructor: "KeyPressEvent", __args: [ a ] }));
+  let AttributeClass = (a => ({ __constructor: "AttributeClass", __args: [ a ] }));
+  let AttributePlaceholder = (a => ({ __constructor: "AttributePlaceholder", __args: [ a ] }));
+  let AttributeType = (a => ({ __constructor: "AttributeType", __args: [ a ] }));
+  let AttributeOnInput = (a => ({ __constructor: "AttributeOnInput", __args: [ a ] }));
 
   const AppEnv = {
     patch: null,
@@ -1846,9 +1686,9 @@
     onUrlChangedAction: null,
   };
   let KEY_CODE_MAPPINGS = fromList(([([13, KEY_ENTER]), ([8, KEY_BACKSPACE])]));
-  let getKeyFromCode = __curry__((keyCode) => fromMaybe(KEY_ANY, get(keyCode, KEY_CODE_MAPPINGS)));
+  let getKeyFromCode = (keyCode => fromMaybe(KEY_ANY)(get(keyCode)(KEY_CODE_MAPPINGS)));
   const buildKeyPressEvent = event => {
-    const key = getKeyFromCode(event.keyCode, KEY_CODE_MAPPINGS);
+    const key = getKeyFromCode(event.keyCode);
 
     return KeyPressEvent({ ...event, key })
   };
@@ -1916,66 +1756,17 @@
   let placeholder = AttributePlaceholder;
   let inputType = AttributeType;
   let onInput = AttributeOnInput;
-  let text = __curry__((content) => content);
-  let div = __curry__((attrs, children) => h("div", objectifyAttrs(attrs), children));
-  let span = __curry__((attrs, children) => h("span", objectifyAttrs(attrs), children));
-  __curry__((attrs, children) => h("strong", objectifyAttrs(attrs), children));
-  __curry__((attrs, children) => h("i", objectifyAttrs(attrs), children));
-  __curry__((attrs, children) => h("br", objectifyAttrs(attrs), children));
-  __curry__((attrs, children) => h("h1", objectifyAttrs(attrs), children));
-  let h2 = __curry__((attrs, children) => h("h2", objectifyAttrs(attrs), children));
-  __curry__((attrs, children) => h("h3", objectifyAttrs(attrs), children));
-  __curry__((attrs, children) => h("h4", objectifyAttrs(attrs), children));
-  __curry__((attrs, children) => h("h5", objectifyAttrs(attrs), children));
-  __curry__((attrs, children) => h("h6", objectifyAttrs(attrs), children));
-  let p = __curry__((attrs, children) => h("p", objectifyAttrs(attrs), children));
-  __curry__((attrs, children) => h("blockquote", objectifyAttrs(attrs), children));
-  __curry__((attrs, children) => h("code", objectifyAttrs(attrs), children));
-  let ul = __curry__((attrs, children) => h("ul", objectifyAttrs(attrs), children));
-  __curry__((attrs, children) => h("ol", objectifyAttrs(attrs), children));
-  let li = __curry__((attrs, children) => h("li", objectifyAttrs(attrs), children));
-  let header = __curry__((attrs, children) => h("header", objectifyAttrs(attrs), children));
-  let main = __curry__((attrs, children) => h("main", objectifyAttrs(attrs), children));
-  __curry__((attrs, children) => h("section", objectifyAttrs(attrs), children));
-  __curry__((attrs, children) => h("aside", objectifyAttrs(attrs), children));
-  __curry__((attrs, children) => null);
-  let input = __curry__((attrs, children) => h("input", objectifyAttrs(attrs), children));
-  __curry__((attrs, children) => h("button", objectifyAttrs(attrs), children));
-  __curry__((attrs, children) => h("form", objectifyAttrs(attrs), children));
-  __curry__((attrs, children) => h("img", objectifyAttrs(attrs), children));
-  __curry__((attrs, children) => h("a", objectifyAttrs(attrs), children));
-  __curry__((attrs, children) => {
-    const objAttrs = objectifyAttrs(attrs);
-    const clickHandler = (event) => {
-      event.preventDefault();
-
-      if (objAttrs.to) {
-        const builtUrl = document.location.origin + document.location.pathname + '\#' + objAttrs.to;
-
-        history.pushState({}, '', builtUrl);
-
-        if (AppEnv.onUrlChangedAction) {
-          const wishes = AppEnv.onUrlChangedAction(getCurrentState())(UrlEvent({ url: objAttrs.to }));
-          wishes.forEach(fulfill(runAction)(runAction));
-        }
-      }
-    };
-
-    return h("a", { ...objAttrs, on: { click: clickHandler }}, children);
-  });
-  __curry__((action) => {
-    AppEnv.onUrlChangedAction = action;
-
-    window.onpopstate = function(event) {
-      const path = document.location.hash.substr(1) || "/";
-      const wishes = AppEnv.onUrlChangedAction(getCurrentState())(UrlEvent({ url: path }));
-      wishes.forEach(fulfill(runAction)(runAction));
-      console.log(document.location);
-      // alert(`location: ${document.location}, state: ${JSON.stringify(event.state)}`)
-    };
-  });
-  __curry__((stateUpdate, state, event) => ([Monad.Wish.of(__curry__((_) => stateUpdate(state, event)))]));
-  let render = __curry__((view, initialState, containerId) => {
+  let text = (content => content);
+  let div = (attrs => children => h("div", objectifyAttrs(attrs), children));
+  let span = (attrs => children => h("span", objectifyAttrs(attrs), children));
+  let h2 = (attrs => children => h("h2", objectifyAttrs(attrs), children));
+  let p = (attrs => children => h("p", objectifyAttrs(attrs), children));
+  let ul = (attrs => children => h("ul", objectifyAttrs(attrs), children));
+  let li = (attrs => children => h("li", objectifyAttrs(attrs), children));
+  let header = (attrs => children => h("header", objectifyAttrs(attrs), children));
+  let main = (attrs => children => h("main", objectifyAttrs(attrs), children));
+  let input = (attrs => children => h("input", objectifyAttrs(attrs), children));
+  let render = (view => initialState => containerId => {
       let initialElement = view(initialState);
       const patch = init([attributesModule, propsModule, eventListenersModule]);
     patch(document.getElementById(containerId), initialElement);
@@ -1989,23 +1780,23 @@
 
   // file: /home/runner/work/madparser/madparser/madlib_modules/https___github_com_madlib_lang_maddoc_archive_refs_heads_master_zip/src/Main.mad
 
-  let Definition = __curry__((a, b, c, d, e) => ({ __constructor: "Definition", __args: [ a, b, c, d, e ] }));
-  let TypeDefinition = __curry__((a, b, c) => ({ __constructor: "TypeDefinition", __args: [ a, b, c ] }));
-  let AliasDefinition = __curry__((a, b, c) => ({ __constructor: "AliasDefinition", __args: [ a, b, c ] }));
-  let InterfaceDefinition = __curry__((a, b, c, d) => ({ __constructor: "InterfaceDefinition", __args: [ a, b, c, d ] }));
-  let InstanceDefinition = __curry__((a, b) => ({ __constructor: "InstanceDefinition", __args: [ a, b ] }));
-  let ModuleDocumentation = __curry__((a, b, c, d, e, f, g) => ({ __constructor: "ModuleDocumentation", __args: [ a, b, c, d, e, f, g ] }));
-  let ExpressionItem = __curry__((a, b) => ({ __constructor: "ExpressionItem", __args: [ a, b ] }));
-  let TypeItem = __curry__((a, b) => ({ __constructor: "TypeItem", __args: [ a, b ] }));
-  let AliasItem = __curry__((a, b) => ({ __constructor: "AliasItem", __args: [ a, b ] }));
-  let InterfaceItem = __curry__((a, b) => ({ __constructor: "InterfaceItem", __args: [ a, b ] }));
-  let InstanceItem = __curry__((a, b) => ({ __constructor: "InstanceItem", __args: [ a, b ] }));
-  let docJson = "{\n  \"modules\": [\n    {\n      \"path\": \"/home/runner/work/madparser/madparser/src/Main.spec.mad\",\n      \"description\": \"\",\n      \"typeDeclarations\": [\n        \n      ],\n      \"aliases\": [\n        \n      ],\n      \"interfaces\": [\n        \n      ],\n      \"instances\": [\n        \n      ],\n      \"expressions\": [\n        \n      ]\n    },\n    {\n      \"path\": \"/home/runner/work/madparser/madparser/src/Main.mad\",\n      \"description\": \"\",\n      \"typeDeclarations\": [\n        {\n          \"type\": \"ADT\",\n          \"description\": \"\",\n          \"example\": \"\",\n          \"since\": \"\",\n          \"name\": \"Location\",\n          \"params\": \"\",\n          \"constructors\": [\n            \"Loc Number Number Number\"\n          ]\n        },\n        {\n          \"type\": \"ADT\",\n          \"description\": \"\",\n          \"example\": \"\",\n          \"since\": \"\",\n          \"name\": \"Parser\",\n          \"params\": \"a\",\n          \"constructors\": [\n            \"Parser (String -> Location -> <List <a, String>, Location>)\"\n          ]\n        },\n        {\n          \"type\": \"ADT\",\n          \"description\": \"\",\n          \"example\": \"\",\n          \"since\": \"\",\n          \"name\": \"Error\",\n          \"params\": \"\",\n          \"constructors\": [\n            \"Error Location\"\n          ]\n        }\n      ],\n      \"aliases\": [\n        \n      ],\n      \"interfaces\": [\n        \n      ],\n      \"instances\": [\n        {\n          \"name\": \"Functor\",\n          \"description\": \"maps the contained value of a Parser.\",\n          \"example\": \"type Letter = Letter String\\nmap(Letter, anyChar) // Parser Letter\",\n          \"since\": \"0.0.1\",\n          \"constraints\": \"\",\n          \"declaration\": \"Functor Parser\"\n        },\n        {\n          \"name\": \"Applicative\",\n          \"description\": \"This is the heart of how parser combinators work. With ap you can apply many\\narguments to a mapping function.\",\n          \"example\": \"parser = pipe(\\nmap((a, b, c) => a ++ b ++ c),\\nap($, abcParser),\\nap($, abcParser)\\n)(abcParser)\",\n          \"since\": \"0.0.1\",\n          \"constraints\": \"\",\n          \"declaration\": \"Applicative Parser\"\n        },\n        {\n          \"name\": \"Monad\",\n          \"description\": \"The Monad instance of Parser helps when you need to parse something based on\\nthe previous computation.\",\n          \"example\": \"\",\n          \"since\": \"0.0.1\",\n          \"constraints\": \"\",\n          \"declaration\": \"Monad Parser\"\n        },\n        {\n          \"name\": \"Alternative\",\n          \"description\": \"Alternative provides a way to fail over in case a parser failed. alt takes two\\nparsers, and if the first one fails, it tries to run the second one.\",\n          \"example\": \"runParser(alt(char(\\\"c\\\"), char(\\\"a\\\")), \\\"a\\\") // Right \\\"a\\\"\",\n          \"since\": \"0.0.1\",\n          \"constraints\": \"\",\n          \"declaration\": \"Alternative Parser\"\n        }\n      ],\n      \"expressions\": [\n        {\n          \"name\": \"runParser\",\n          \"description\": \"Runs a given parser with a given input. If it is successful it returns a Right\\nof the parsed type, otherwise it returns an error with the location of where\\nit failed.\",\n          \"example\": \"runParser(anyChar, \\\"a\\\")\",\n          \"since\": \"0.0.1\",\n          \"type\": \"Parser a -> String -> Either Error a\"\n        },\n        {\n          \"name\": \"anyChar\",\n          \"description\": \"A parser combinator that matches any character and returns a Parser String\\ncontaining that character.\",\n          \"example\": \"parse(anyChar, \\\"?\\\") // Right \\\"?\\\"\",\n          \"since\": \"0.0.1\",\n          \"type\": \"Parser String\"\n        },\n        {\n          \"name\": \"location\",\n          \"description\": \"A parser combinator that returns the current location in the given input. This\\ncombinator can be used to collect location information for your parsed AST.\",\n          \"example\": \"type Letter = L Location Location String\\nexpected = Right()\\n\\nabcParser = pipe(\\nmap((start, c, end) => L(start, end, c)),\\nap($, oneOf([\\\"a\\\", \\\"b\\\", \\\"c\\\"])),\\nap($, location)\\n)(location)\\n\\nparser = pipe(\\nmap((a, b, c) => [a, b, c]),\\nap($, abcParser),\\nap($, abcParser)\\n)(abcParser)\\n\\nrunParser(parser, \\\"cba\\\")\\n// Right [\\n//   L(Loc(0, 0, 0), Loc(1, 0, 1), \\\"c\\\"),\\n//   L(Loc(1, 0, 1), Loc(2, 0, 2), \\\"b\\\"),\\n//   L(Loc(2, 0, 2), Loc(3, 0, 3), \\\"a\\\")\\n// ]\",\n          \"since\": \"0.0.1\",\n          \"type\": \"Parser Location\"\n        },\n        {\n          \"name\": \"oneOf\",\n          \"description\": \"A parser combinator that matches any of the given characters.\",\n          \"example\": \"runParser(oneOf([\\\"1\\\", \\\"-\\\", \\\"?\\\"]), \\\"?\\\") // Right \\\"?\\\"\\nrunParser(oneOf([\\\"1\\\", \\\"-\\\", \\\"?\\\"]), \\\"1\\\") // Right \\\"1\\\"\\nrunParser(oneOf([\\\"1\\\", \\\"-\\\", \\\"?\\\"]), \\\"2\\\") // Left (Loc 0 0 0)\",\n          \"since\": \"0.0.1\",\n          \"type\": \"List String -> Parser String\"\n        },\n        {\n          \"name\": \"notOneOf\",\n          \"description\": \"A parser combinator that matches all except the given characters.\",\n          \"example\": \"runParser(notOneOf([\\\"1\\\", \\\"-\\\", \\\"?\\\"]), \\\"?\\\") // Left (Loc 0 0 0)\\nrunParser(notOneOf([\\\"1\\\", \\\"-\\\", \\\"?\\\"]), \\\"1\\\") // Left (Loc 0 0 0)\\nrunParser(notOneOf([\\\"1\\\", \\\"-\\\", \\\"?\\\"]), \\\"2\\\") // Right \\\"2\\\"\",\n          \"since\": \"0.0.1\",\n          \"type\": \"List String -> Parser String\"\n        },\n        {\n          \"name\": \"choice\",\n          \"description\": \"A parser combinator that successively tries all given parsers until one\\nsucceeds, or fails if none has succeeded.\",\n          \"example\": \"parser = choice([string(\\\"good\\\"), string(\\\"really good\\\")])\\nrunParser(parser, \\\"good\\\")        // Right \\\"good\\\"\\nrunParser(parser, \\\"really good\\\") // Right \\\"really good\\\"\\nrunParser(parser, \\\"really\\\")      // Left (Loc 0 0 0)\",\n          \"since\": \"0.0.1\",\n          \"type\": \"List (Parser a) -> Parser a\"\n        },\n        {\n          \"name\": \"many\",\n          \"description\": \"A parser combinator that applies 0 or more times the given parser.\",\n          \"example\": \"runParser(many(string(\\\"OK\\\")), \\\"OKOKOK\\\") // Right \\\"OKOKOK\\\"\\nrunParser(many(string(\\\"O\\\")), \\\"OKOKOK\\\")  // Left (Loc 1 0 1)\",\n          \"since\": \"0.0.1\",\n          \"type\": \"Parser a -> Parser (List a)\"\n        },\n        {\n          \"name\": \"some\",\n          \"description\": \"A parser combinator that applies 1 or more times the given parser. If no parse\\nis found at all it\'ll fail.\",\n          \"example\": \"runParser(some(string(\\\"OK\\\")), \\\"OKOKOK\\\") // Right \\\"OKOKOK\\\"\\nrunParser(some(string(\\\"OK\\\")), \\\"NOPE\\\")   // Left (Loc 0 0 0)\",\n          \"since\": \"0.0.1\",\n          \"type\": \"Parser a -> Parser (List a)\"\n        },\n        {\n          \"name\": \"manyTill\",\n          \"description\": \"A parser combinator that matches many times the first given parser until the\\nsecond one matches. Note that the input matched by the end parser will then\\nbe consumed. If you don\'t want to consume the end parser\'s matched input,\\nyou can use lookAhead.\",\n          \"example\": \"parser = manyTill(char(\\\"a\\\"), char(\\\"b\\\"))\\nrunParser(parser, \\\"aaaaab\\\") // Right \\\"aaaaa\\\"\",\n          \"since\": \"0.0.1\",\n          \"type\": \"Parser a -> Parser b -> Parser (List a)\"\n        },\n        {\n          \"name\": \"someTill\",\n          \"description\": \"A parser combinator that matches one or more times the first given parser until the\\nsecond one matches. If the first parser does not match the input, it will fail.\\nNote that the input matched by the end parser will then be consumed. If you don\'t\\nwant to consume the end parser\'s matched input, you can use lookAhead.\",\n          \"example\": \"parser1 = someTill(char(\\\"a\\\"), char(\\\"b\\\"))\\nrunParser(parser1, \\\"aaaaab\\\") // Right \\\"aaaaa\\\"\\n\\nparser2 = someTill(char(\\\"a\\\"), char(\\\"b\\\"))\\nrunParser(parser2, \\\"b\\\") // Left (Loc 0 0 0)\",\n          \"since\": \"0.0.1\",\n          \"type\": \"Parser a -> Parser b -> Parser (List a)\"\n        },\n        {\n          \"name\": \"lookAhead\",\n          \"description\": \"A parser combinator that makes the given parser not consume any input.\",\n          \"example\": \"alt(char(\\\"a\\\"), lookAhead(anyChar))\",\n          \"since\": \"0.0.1\",\n          \"type\": \"Parser a -> Parser a\"\n        },\n        {\n          \"name\": \"takeWhile\",\n          \"description\": \"A parser combinator that parses all characters while the given predicate\\nreturns true.\",\n          \"example\": \"runParser(takeWhile(notEquals(\\\"-\\\")), \\\"abcdef-\\\")\",\n          \"since\": \"0.0.1\",\n          \"type\": \"(String -> Boolean) -> Parser String\"\n        },\n        {\n          \"name\": \"satisfy\",\n          \"description\": \"A parser combinator that parses a character based on a given predicate.\",\n          \"example\": \"runParser(satisfy(isDigit), \\\"1\\\")  // Right \\\"1\\\"\\nrunParser(satisfy(isLetter), \\\"1\\\") // Left (Loc 0 0 0)\",\n          \"since\": \"0.0.1\",\n          \"type\": \"(String -> Boolean) -> Parser String\"\n        },\n        {\n          \"name\": \"char\",\n          \"description\": \"A parser combinator that parses a single given character.\",\n          \"example\": \"runParser(char(\\\"a\\\"), \\\"a\\\") // Right \\\"a\\\"\\nrunParser(char(\\\"a\\\"), \\\"b\\\") // Left (Loc 0 0 0)\",\n          \"since\": \"0.0.1\",\n          \"type\": \"String -> Parser String\"\n        },\n        {\n          \"name\": \"notChar\",\n          \"description\": \"The complement of char, it parses any char that is not the one given.\",\n          \"example\": \"runParser(notChar(\\\"a\\\"), \\\"a\\\") // Left (Loc 0 0 0)\\nrunParser(notChar(\\\"a\\\"), \\\"b\\\") // Right \\\"a\\\"\",\n          \"since\": \"0.0.1\",\n          \"type\": \"String -> Parser String\"\n        },\n        {\n          \"name\": \"eof\",\n          \"description\": \"A parser combinator that parses the eof token, or the end of the input.\",\n          \"example\": \"runParser(eof, \\\"\\\")  // Right ()\\nrunParser(eof, \\\"a\\\") // Left (Loc 0 0 0)\",\n          \"since\": \"0.0.1\",\n          \"type\": \"Parser ()\"\n        },\n        {\n          \"name\": \"string\",\n          \"description\": \"A parser combinator that parses a given string.\",\n          \"example\": \"runParser(string(\\\"hello world\\\"), \\\"hello world\\\") // Right \\\"hello world\\\"\\nrunParser(string(\\\"hello world\\\"), \\\"hello\\\")       // Left (Loc 0 0 0)\",\n          \"since\": \"0.0.1\",\n          \"type\": \"String -> Parser String\"\n        },\n        {\n          \"name\": \"spaces\",\n          \"description\": \"A parser combinator that parses empty characters such as spaces, line returns\\nor tabs.\",\n          \"example\": \"runParser(spaces, \\\" \\\\t\\\\n\\\")  // Right \\\" \\\\t\\\\n\\\"\\nrunParser(spaces, \\\" \\\\t\\\\na\\\") // Left (Loc 0 0 0)\",\n          \"since\": \"0.0.1\",\n          \"type\": \"Parser String\"\n        },\n        {\n          \"name\": \"token\",\n          \"description\": \"A parser combinator that parses the given parser and discards all trailing\\nspaces.\",\n          \"example\": \"runParser(token(string(\\\"hello\\\")), \\\"hello\\\\n\\\")  // Right \\\"hello\\\"\\nrunParser(token(string(\\\"hello\\\")), \\\"hello\\\\n!\\\") // Left (Loc 0 0 0)\",\n          \"since\": \"0.0.1\",\n          \"type\": \"Parser a -> Parser a\"\n        },\n        {\n          \"name\": \"symbol\",\n          \"description\": \"A parser combinator that parses a given string and discards all trailing\\nspaces.\",\n          \"example\": \"runParser(symbol(\\\"hello\\\"), \\\"hello\\\\n\\\")  // Right \\\"hello\\\"\\nrunParser(symbol(\\\"hello\\\"), \\\"hello\\\\n!\\\") // Left (Loc 0 0 0)\",\n          \"since\": \"0.0.1\",\n          \"type\": \"String -> Parser String\"\n        },\n        {\n          \"name\": \"digit\",\n          \"description\": \"A parser combinator that parses a digit.\",\n          \"example\": \"\",\n          \"since\": \"0.0.1\",\n          \"type\": \"Parser String\"\n        },\n        {\n          \"name\": \"letter\",\n          \"description\": \"A parser combinator that parses a letter.\",\n          \"example\": \"\",\n          \"since\": \"0.0.1\",\n          \"type\": \"Parser String\"\n        },\n        {\n          \"name\": \"letters\",\n          \"description\": \"A parser combinator that parses many letters.\",\n          \"example\": \"\",\n          \"since\": \"0.0.1\",\n          \"type\": \"Parser String\"\n        }\n      ]\n    }\n  ]\n}\n";
-  let parser = J.field("modules", J.list(J.map7(ModuleDocumentation, J.field("path", J.string), J.field("description", J.string), J.field("expressions", J.list(J.map5(Definition, J.field("name", J.string), J.field("description", J.string), J.field("type", J.string), J.field("since", J.string), J.field("example", J.string)))), J.field("typeDeclarations", J.list(J.map3(TypeDefinition, J.field("name", J.string), J.field("params", J.string), J.field("constructors", J.list(J.string))))), J.field("aliases", J.list(J.map3(AliasDefinition, J.field("name", J.string), J.field("params", J.string), J.field("aliasedType", J.string)))), J.field("interfaces", J.list(J.map4(InterfaceDefinition, J.field("name", J.string), J.field("vars", J.string), J.field("constraints", J.string), J.field("methods", J.list(J.string))))), J.field("instances", J.list(J.map2(InstanceDefinition, J.field("declaration", J.string), J.field("constraints", J.string)))))));
-  let parsedDocumentation = J.parse(parser, docJson);
-  let sort = __curry__((fn, xs) => xs.sort(fn));
-  let deriveModuleName = __curry__((_P_) => fromMaybe("")(nth(0)(split(".")(fromMaybe("???")(last(split("/")(_P_)))))));
-  let getDocItemName = __curry__((__x__) => ((__x__) => {
+  let Definition = (a => b => c => d => e => ({ __constructor: "Definition", __args: [ a, b, c, d, e ] }));
+  let TypeDefinition = (a => b => c => ({ __constructor: "TypeDefinition", __args: [ a, b, c ] }));
+  let AliasDefinition = (a => b => c => ({ __constructor: "AliasDefinition", __args: [ a, b, c ] }));
+  let InterfaceDefinition = (a => b => c => d => ({ __constructor: "InterfaceDefinition", __args: [ a, b, c, d ] }));
+  let InstanceDefinition = (a => b => ({ __constructor: "InstanceDefinition", __args: [ a, b ] }));
+  let ModuleDocumentation = (a => b => c => d => e => f => g => ({ __constructor: "ModuleDocumentation", __args: [ a, b, c, d, e, f, g ] }));
+  let ExpressionItem = (a => b => ({ __constructor: "ExpressionItem", __args: [ a, b ] }));
+  let TypeItem = (a => b => ({ __constructor: "TypeItem", __args: [ a, b ] }));
+  let AliasItem = (a => b => ({ __constructor: "AliasItem", __args: [ a, b ] }));
+  let InterfaceItem = (a => b => ({ __constructor: "InterfaceItem", __args: [ a, b ] }));
+  let InstanceItem = (a => b => ({ __constructor: "InstanceItem", __args: [ a, b ] }));
+  let docJson = "{\n  \"modules\": [\n    {\n      \"path\": \"/home/runner/work/madparser/madparser/src/Main.spec.mad\",\n      \"description\": \"\",\n      \"typeDeclarations\": [\n        \n      ],\n      \"aliases\": [\n        \n      ],\n      \"interfaces\": [\n        \n      ],\n      \"instances\": [\n        \n      ],\n      \"expressions\": [\n        \n      ]\n    },\n    {\n      \"path\": \"/home/runner/work/madparser/madparser/src/Main.mad\",\n      \"description\": \"\",\n      \"typeDeclarations\": [\n        {\n          \"type\": \"ADT\",\n          \"description\": \"\",\n          \"example\": \"\",\n          \"since\": \"\",\n          \"name\": \"Location\",\n          \"params\": \"\",\n          \"constructors\": [\n            \"Loc Number Number Number\"\n          ]\n        },\n        {\n          \"type\": \"ADT\",\n          \"description\": \"\",\n          \"example\": \"\",\n          \"since\": \"\",\n          \"name\": \"Parser\",\n          \"params\": \"a\",\n          \"constructors\": [\n            \"Parser (String -> Location -> <List <a, String>, Location>)\"\n          ]\n        },\n        {\n          \"type\": \"ADT\",\n          \"description\": \"\",\n          \"example\": \"\",\n          \"since\": \"\",\n          \"name\": \"Error\",\n          \"params\": \"\",\n          \"constructors\": [\n            \"Error Location\"\n          ]\n        }\n      ],\n      \"aliases\": [\n        \n      ],\n      \"interfaces\": [\n        \n      ],\n      \"instances\": [\n        {\n          \"name\": \"Functor\",\n          \"description\": \"maps the contained value of a Parser.\",\n          \"example\": \"type Letter = Letter String\\nmap(Letter, anyChar) // Parser Letter\",\n          \"since\": \"0.0.1\",\n          \"constraints\": \"\",\n          \"declaration\": \"Functor Parser\"\n        },\n        {\n          \"name\": \"Applicative\",\n          \"description\": \"This is the heart of how parser combinators work. With ap you can apply many\\narguments to a mapping function.\",\n          \"example\": \"parser = pipe(\\nmap((a, b, c) => a ++ b ++ c),\\nap($, abcParser),\\nap($, abcParser)\\n)(abcParser)\",\n          \"since\": \"0.0.1\",\n          \"constraints\": \"\",\n          \"declaration\": \"Applicative Parser\"\n        },\n        {\n          \"name\": \"Monad\",\n          \"description\": \"The Monad instance of Parser helps when you need to parse something based on\\nthe previous computation.\",\n          \"example\": \"\",\n          \"since\": \"0.0.1\",\n          \"constraints\": \"\",\n          \"declaration\": \"Monad Parser\"\n        },\n        {\n          \"name\": \"Alternative\",\n          \"description\": \"Alternative provides a way to fail over in case a parser failed. alt takes two\\nparsers, and if the first one fails, it tries to run the second one.\",\n          \"example\": \"runParser(alt(char(\\\"c\\\"), char(\\\"a\\\")), \\\"a\\\") // Right \\\"a\\\"\",\n          \"since\": \"0.0.1\",\n          \"constraints\": \"\",\n          \"declaration\": \"Alternative Parser\"\n        }\n      ],\n      \"expressions\": [\n        {\n          \"name\": \"runParser\",\n          \"description\": \"Runs a given parser with a given input. If it is successful it returns a Right\\nof the parsed type, otherwise it returns an error with the location of where\\nit failed.\",\n          \"example\": \"runParser(anyChar, \\\"a\\\")\",\n          \"since\": \"0.0.1\",\n          \"type\": \"Parser a -> String -> Either Error a\"\n        },\n        {\n          \"name\": \"anyChar\",\n          \"description\": \"A parser combinator that matches any character and returns a Parser String\\ncontaining that character.\",\n          \"example\": \"parse(anyChar, \\\"?\\\") // Right \\\"?\\\"\",\n          \"since\": \"0.0.1\",\n          \"type\": \"Parser String\"\n        },\n        {\n          \"name\": \"location\",\n          \"description\": \"A parser combinator that returns the current location in the given input. This\\ncombinator can be used to collect location information for your parsed AST.\",\n          \"example\": \"type Letter = L Location Location String\\nexpected = Right()\\n\\nabcParser = pipe(\\nmap((start, c, end) => L(start, end, c)),\\nap($, oneOf([\\\"a\\\", \\\"b\\\", \\\"c\\\"])),\\nap($, location)\\n)(location)\\n\\nparser = pipe(\\nmap((a, b, c) => [a, b, c]),\\nap($, abcParser),\\nap($, abcParser)\\n)(abcParser)\\n\\nrunParser(parser, \\\"cba\\\")\\n// Right [\\n//   L(Loc(0, 0, 0), Loc(1, 0, 1), \\\"c\\\"),\\n//   L(Loc(1, 0, 1), Loc(2, 0, 2), \\\"b\\\"),\\n//   L(Loc(2, 0, 2), Loc(3, 0, 3), \\\"a\\\")\\n// ]\",\n          \"since\": \"0.0.1\",\n          \"type\": \"Parser Location\"\n        },\n        {\n          \"name\": \"oneOf\",\n          \"description\": \"A parser combinator that matches any of the given characters.\",\n          \"example\": \"runParser(oneOf([\\\"1\\\", \\\"-\\\", \\\"?\\\"]), \\\"?\\\") // Right \\\"?\\\"\\nrunParser(oneOf([\\\"1\\\", \\\"-\\\", \\\"?\\\"]), \\\"1\\\") // Right \\\"1\\\"\\nrunParser(oneOf([\\\"1\\\", \\\"-\\\", \\\"?\\\"]), \\\"2\\\") // Left (Loc 0 0 0)\",\n          \"since\": \"0.0.1\",\n          \"type\": \"List String -> Parser String\"\n        },\n        {\n          \"name\": \"notOneOf\",\n          \"description\": \"A parser combinator that matches all except the given characters.\",\n          \"example\": \"runParser(notOneOf([\\\"1\\\", \\\"-\\\", \\\"?\\\"]), \\\"?\\\") // Left (Loc 0 0 0)\\nrunParser(notOneOf([\\\"1\\\", \\\"-\\\", \\\"?\\\"]), \\\"1\\\") // Left (Loc 0 0 0)\\nrunParser(notOneOf([\\\"1\\\", \\\"-\\\", \\\"?\\\"]), \\\"2\\\") // Right \\\"2\\\"\",\n          \"since\": \"0.0.1\",\n          \"type\": \"List String -> Parser String\"\n        },\n        {\n          \"name\": \"choice\",\n          \"description\": \"A parser combinator that successively tries all given parsers until one\\nsucceeds, or fails if none has succeeded.\",\n          \"example\": \"parser = choice([string(\\\"good\\\"), string(\\\"really good\\\")])\\nrunParser(parser, \\\"good\\\")        // Right \\\"good\\\"\\nrunParser(parser, \\\"really good\\\") // Right \\\"really good\\\"\\nrunParser(parser, \\\"really\\\")      // Left (Loc 0 0 0)\",\n          \"since\": \"0.0.1\",\n          \"type\": \"List (Parser a) -> Parser a\"\n        },\n        {\n          \"name\": \"many\",\n          \"description\": \"A parser combinator that applies 0 or more times the given parser.\",\n          \"example\": \"runParser(many(string(\\\"OK\\\")), \\\"OKOKOK\\\") // Right [\\\"OK\\\", \\\"OK\\\", \\\"OK\\\"]\\nrunParser(many(string(\\\"O\\\")), \\\"OKOKOK\\\")  // Left (Loc 1 0 1)\",\n          \"since\": \"0.0.1\",\n          \"type\": \"Parser a -> Parser (List a)\"\n        },\n        {\n          \"name\": \"some\",\n          \"description\": \"A parser combinator that applies 1 or more times the given parser. If no parse\\nis found at all it\'ll fail.\",\n          \"example\": \"runParser(some(string(\\\"OK\\\")), \\\"OKOKOK\\\") // Right [\\\"OK\\\", \\\"OK\\\", \\\"OK\\\"]\\nrunParser(some(string(\\\"OK\\\")), \\\"NOPE\\\")   // Left (Loc 0 0 0)\",\n          \"since\": \"0.0.1\",\n          \"type\": \"Parser a -> Parser (List a)\"\n        },\n        {\n          \"name\": \"manyTill\",\n          \"description\": \"A parser combinator that matches many times the first given parser until the\\nsecond one matches. Note that the input matched by the end parser will then\\nbe consumed. If you don\'t want to consume the end parser\'s matched input,\\nyou can use lookAhead.\",\n          \"example\": \"parser = manyTill(char(\\\"a\\\"), char(\\\"b\\\"))\\nrunParser(parser, \\\"aaaaab\\\") // Right \\\"aaaaa\\\"\",\n          \"since\": \"0.0.1\",\n          \"type\": \"Parser a -> Parser b -> Parser (List a)\"\n        },\n        {\n          \"name\": \"someTill\",\n          \"description\": \"A parser combinator that matches one or more times the first given parser until the\\nsecond one matches. If the first parser does not match the input, it will fail.\\nNote that the input matched by the end parser will then be consumed. If you don\'t\\nwant to consume the end parser\'s matched input, you can use lookAhead.\",\n          \"example\": \"parser1 = someTill(char(\\\"a\\\"), char(\\\"b\\\"))\\nrunParser(parser1, \\\"aaaaab\\\") // Right \\\"aaaaa\\\"\\n\\nparser2 = someTill(char(\\\"a\\\"), char(\\\"b\\\"))\\nrunParser(parser2, \\\"b\\\") // Left (Loc 0 0 0)\",\n          \"since\": \"0.0.1\",\n          \"type\": \"Parser a -> Parser b -> Parser (List a)\"\n        },\n        {\n          \"name\": \"lookAhead\",\n          \"description\": \"A parser combinator that makes the given parser not consume any input.\",\n          \"example\": \"alt(char(\\\"a\\\"), lookAhead(anyChar))\",\n          \"since\": \"0.0.1\",\n          \"type\": \"Parser a -> Parser a\"\n        },\n        {\n          \"name\": \"takeWhile\",\n          \"description\": \"A parser combinator that parses all characters while the given predicate\\nreturns true.\",\n          \"example\": \"runParser(takeWhile(notEquals(\\\"-\\\")), \\\"abcdef-\\\")\",\n          \"since\": \"0.0.1\",\n          \"type\": \"(String -> Boolean) -> Parser String\"\n        },\n        {\n          \"name\": \"satisfy\",\n          \"description\": \"A parser combinator that parses a character based on a given predicate.\",\n          \"example\": \"runParser(satisfy(isDigit), \\\"1\\\")  // Right \\\"1\\\"\\nrunParser(satisfy(isLetter), \\\"1\\\") // Left (Loc 0 0 0)\",\n          \"since\": \"0.0.1\",\n          \"type\": \"(String -> Boolean) -> Parser String\"\n        },\n        {\n          \"name\": \"char\",\n          \"description\": \"A parser combinator that parses a single given character.\",\n          \"example\": \"runParser(char(\\\"a\\\"), \\\"a\\\") // Right \\\"a\\\"\\nrunParser(char(\\\"a\\\"), \\\"b\\\") // Left (Loc 0 0 0)\",\n          \"since\": \"0.0.1\",\n          \"type\": \"String -> Parser String\"\n        },\n        {\n          \"name\": \"notChar\",\n          \"description\": \"The complement of char, it parses any char that is not the one given.\",\n          \"example\": \"runParser(notChar(\\\"a\\\"), \\\"a\\\") // Left (Loc 0 0 0)\\nrunParser(notChar(\\\"a\\\"), \\\"b\\\") // Right \\\"a\\\"\",\n          \"since\": \"0.0.1\",\n          \"type\": \"String -> Parser String\"\n        },\n        {\n          \"name\": \"eof\",\n          \"description\": \"A parser combinator that parses the eof token, or the end of the input.\",\n          \"example\": \"runParser(eof, \\\"\\\")  // Right ()\\nrunParser(eof, \\\"a\\\") // Left (Loc 0 0 0)\",\n          \"since\": \"0.0.1\",\n          \"type\": \"Parser ()\"\n        },\n        {\n          \"name\": \"string\",\n          \"description\": \"A parser combinator that parses a given string.\",\n          \"example\": \"runParser(string(\\\"hello world\\\"), \\\"hello world\\\") // Right \\\"hello world\\\"\\nrunParser(string(\\\"hello world\\\"), \\\"hello\\\")       // Left (Loc 0 0 0)\",\n          \"since\": \"0.0.1\",\n          \"type\": \"String -> Parser String\"\n        },\n        {\n          \"name\": \"spaces\",\n          \"description\": \"A parser combinator that parses empty characters such as spaces, line returns\\nor tabs.\",\n          \"example\": \"runParser(spaces, \\\" \\\\t\\\\n\\\")  // Right \\\" \\\\t\\\\n\\\"\\nrunParser(spaces, \\\" \\\\t\\\\na\\\") // Left (Loc 0 0 0)\",\n          \"since\": \"0.0.1\",\n          \"type\": \"Parser String\"\n        },\n        {\n          \"name\": \"token\",\n          \"description\": \"A parser combinator that parses the given parser and discards all trailing\\nspaces.\",\n          \"example\": \"runParser(token(string(\\\"hello\\\")), \\\"hello\\\\n\\\")  // Right \\\"hello\\\"\\nrunParser(token(string(\\\"hello\\\")), \\\"hello\\\\n!\\\") // Left (Loc 0 0 0)\",\n          \"since\": \"0.0.1\",\n          \"type\": \"Parser a -> Parser a\"\n        },\n        {\n          \"name\": \"symbol\",\n          \"description\": \"A parser combinator that parses a given string and discards all trailing\\nspaces.\",\n          \"example\": \"runParser(symbol(\\\"hello\\\"), \\\"hello\\\\n\\\")  // Right \\\"hello\\\"\\nrunParser(symbol(\\\"hello\\\"), \\\"hello\\\\n!\\\") // Left (Loc 0 0 0)\",\n          \"since\": \"0.0.1\",\n          \"type\": \"String -> Parser String\"\n        },\n        {\n          \"name\": \"digit\",\n          \"description\": \"A parser combinator that parses a digit.\",\n          \"example\": \"\",\n          \"since\": \"0.0.1\",\n          \"type\": \"Parser String\"\n        },\n        {\n          \"name\": \"letter\",\n          \"description\": \"A parser combinator that parses a letter.\",\n          \"example\": \"\",\n          \"since\": \"0.0.1\",\n          \"type\": \"Parser String\"\n        },\n        {\n          \"name\": \"letters\",\n          \"description\": \"A parser combinator that parses many letters.\",\n          \"example\": \"\",\n          \"since\": \"0.0.1\",\n          \"type\": \"Parser String\"\n        }\n      ]\n    }\n  ]\n}\n";
+  let parser = J.field("modules")(J.list(J.map7(ModuleDocumentation)(J.field("path")(J.string))(J.field("description")(J.string))(J.field("expressions")(J.list(J.map5(Definition)(J.field("name")(J.string))(J.field("description")(J.string))(J.field("type")(J.string))(J.field("since")(J.string))(J.field("example")(J.string)))))(J.field("typeDeclarations")(J.list(J.map3(TypeDefinition)(J.field("name")(J.string))(J.field("params")(J.string))(J.field("constructors")(J.list(J.string))))))(J.field("aliases")(J.list(J.map3(AliasDefinition)(J.field("name")(J.string))(J.field("params")(J.string))(J.field("aliasedType")(J.string)))))(J.field("interfaces")(J.list(J.map4(InterfaceDefinition)(J.field("name")(J.string))(J.field("vars")(J.string))(J.field("constraints")(J.string))(J.field("methods")(J.list(J.string))))))(J.field("instances")(J.list(J.map2(InstanceDefinition)(J.field("declaration")(J.string))(J.field("constraints")(J.string)))))));
+  let parsedDocumentation = J.parse(parser)(docJson);
+  let sort = (fn => xs => xs.sort(fn));
+  let deriveModuleName = (_P_ => fromMaybe("")(nth(0)(split(".")(fromMaybe("???")(last(split("/")(_P_)))))));
+  let getDocItemName = (__x__ => ((__x__) => {
     if (__x__.__constructor === "ExpressionItem" && true && __x__.__args[1].__constructor === "Definition" && true && true && true && true && true) {
       let name = __x__.__args[1].__args[0];
       return name;
@@ -2028,13 +1819,14 @@
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(__x__));
   let initialState = ((__x__) => {
     if (__x__.__constructor === "Right" && true) {
       let modules = __x__.__args[0];
-      return __curry__((_P_) => __curry__((docItems) => ({ docItems: docItems, search: "" }))(sort(__curry__((a, b) => getDocItemName(a) > getDocItemName(b) ? 1 : -1))(flatten(Functor.List.map(__curry__((__x__) => ((__x__) => {
+      return (_P_ => (docItems => ({ docItems: docItems, search: "" }))(sort((a => b => getDocItemName(a) > getDocItemName(b) ? 1 : -1))(flatten(Functor.List.map((__x__ => ((__x__) => {
     if (__x__.__constructor === "ModuleDocumentation" && true && true && true && true && true && true && true) {
       let path = __x__.__args[0];
       let exps = __x__.__args[2];
@@ -2042,20 +1834,22 @@
       let aliasDefs = __x__.__args[4];
       let interfaces = __x__.__args[5];
       let instances = __x__.__args[6];
-      return ([ ...Functor.List.map(__curry__((exp) => ExpressionItem(deriveModuleName(path), exp)), exps),  ...Functor.List.map(__curry__((typeDef) => TypeItem(deriveModuleName(path), typeDef)), typeDefs),  ...Functor.List.map(__curry__((aliasDef) => AliasItem(deriveModuleName(path), aliasDef)), aliasDefs),  ...Functor.List.map(__curry__((interfac) => InterfaceItem(deriveModuleName(path), interfac)), interfaces),  ...Functor.List.map(__curry__((inst) => InstanceItem(deriveModuleName(path), inst)), instances)]);
+      return ([ ...Functor.List.map((exp => ExpressionItem(deriveModuleName(path))(exp)))(exps),  ...Functor.List.map((typeDef => TypeItem(deriveModuleName(path))(typeDef)))(typeDefs),  ...Functor.List.map((aliasDef => AliasItem(deriveModuleName(path))(aliasDef)))(aliasDefs),  ...Functor.List.map((interfac => InterfaceItem(deriveModuleName(path))(interfac)))(interfaces),  ...Functor.List.map((inst => InstanceItem(deriveModuleName(path))(inst)))(instances)]);
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(__x__)))(_P_)))))(modules);
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(parsedDocumentation);
-  let getDefName = __curry__((__x__) => ((__x__) => {
+  let getDefName = (__x__ => ((__x__) => {
     if (__x__.__constructor === "Definition" && true && true && true && true && true) {
       let name = __x__.__args[0];
       return name;
@@ -2064,7 +1858,7 @@
       return "";
     }
   })(__x__));
-  let getDefType = __curry__((__x__) => ((__x__) => {
+  let getDefType = (__x__ => ((__x__) => {
     if (__x__.__constructor === "Definition" && true && true && true && true && true) {
       let tipe = __x__.__args[2];
       return tipe;
@@ -2073,7 +1867,7 @@
       return "";
     }
   })(__x__));
-  let getDefSince = __curry__((__x__) => ((__x__) => {
+  let getDefSince = (__x__ => ((__x__) => {
     if (__x__.__constructor === "Definition" && true && true && true && true && true) {
       let since = __x__.__args[3];
       return since;
@@ -2082,7 +1876,7 @@
       return "";
     }
   })(__x__));
-  let getDefExample = __curry__((__x__) => ((__x__) => {
+  let getDefExample = (__x__ => ((__x__) => {
     if (__x__.__constructor === "Definition" && true && true && true && true && true) {
       let example = __x__.__args[4];
       return example;
@@ -2091,7 +1885,7 @@
       return "";
     }
   })(__x__));
-  let getDefDescription = __curry__((__x__) => ((__x__) => {
+  let getDefDescription = (__x__ => ((__x__) => {
     if (__x__.__constructor === "Definition" && true && true && true && true && true) {
       let desc = __x__.__args[1];
       return desc;
@@ -2100,7 +1894,7 @@
       return "";
     }
   })(__x__));
-  let getTypeDefName = __curry__((__x__) => ((__x__) => {
+  let getTypeDefName = (__x__ => ((__x__) => {
     if (__x__.__constructor === "TypeDefinition" && true && true && true) {
       let name = __x__.__args[0];
       return name;
@@ -2109,7 +1903,7 @@
       return "";
     }
   })(__x__));
-  let getTypeDefParams = __curry__((__x__) => ((__x__) => {
+  let getTypeDefParams = (__x__ => ((__x__) => {
     if (__x__.__constructor === "TypeDefinition" && true && true && true) {
       let params = __x__.__args[1];
       return params;
@@ -2118,7 +1912,7 @@
       return "";
     }
   })(__x__));
-  let getTypeDefConstructors = __curry__((__x__) => ((__x__) => {
+  let getTypeDefConstructors = (__x__ => ((__x__) => {
     if (__x__.__constructor === "TypeDefinition" && true && true && true) {
       let ctors = __x__.__args[2];
       return ctors;
@@ -2127,7 +1921,7 @@
       return ([]);
     }
   })(__x__));
-  let getAliasName = __curry__((__x__) => ((__x__) => {
+  let getAliasName = (__x__ => ((__x__) => {
     if (__x__.__constructor === "AliasDefinition" && true && true && true) {
       let n = __x__.__args[0];
       return n;
@@ -2136,7 +1930,7 @@
       return "";
     }
   })(__x__));
-  let getAliasParams = __curry__((__x__) => ((__x__) => {
+  let getAliasParams = (__x__ => ((__x__) => {
     if (__x__.__constructor === "AliasDefinition" && true && __x__.__args[1] === "" && true) {
       return "";
     }
@@ -2148,7 +1942,7 @@
       return "";
     }
   })(__x__));
-  let getAliasType = __curry__((__x__) => ((__x__) => {
+  let getAliasType = (__x__ => ((__x__) => {
     if (__x__.__constructor === "AliasDefinition" && true && true && true) {
       let tipe = __x__.__args[2];
       return tipe;
@@ -2157,7 +1951,7 @@
       return "";
     }
   })(__x__));
-  let getInterfaceName = __curry__((__x__) => ((__x__) => {
+  let getInterfaceName = (__x__ => ((__x__) => {
     if (__x__.__constructor === "InterfaceDefinition" && true && true && true && true) {
       let n = __x__.__args[0];
       return n;
@@ -2166,7 +1960,7 @@
       return "";
     }
   })(__x__));
-  let getInterfaceVars = __curry__((__x__) => ((__x__) => {
+  let getInterfaceVars = (__x__ => ((__x__) => {
     if (__x__.__constructor === "InterfaceDefinition" && true && true && true && true) {
       let vars = __x__.__args[1];
       return vars;
@@ -2175,7 +1969,7 @@
       return "";
     }
   })(__x__));
-  let getInterfaceConstraints = __curry__((__x__) => ((__x__) => {
+  let getInterfaceConstraints = (__x__ => ((__x__) => {
     if (__x__.__constructor === "InterfaceDefinition" && true && true && true && true) {
       let constraints = __x__.__args[2];
       return constraints;
@@ -2184,7 +1978,7 @@
       return "";
     }
   })(__x__));
-  let getInterfaceMethods = __curry__((__x__) => ((__x__) => {
+  let getInterfaceMethods = (__x__ => ((__x__) => {
     if (__x__.__constructor === "InterfaceDefinition" && true && true && true && true) {
       let methods = __x__.__args[3];
       return methods;
@@ -2193,7 +1987,7 @@
       return ([]);
     }
   })(__x__));
-  let getInstanceDeclaration = __curry__((__x__) => ((__x__) => {
+  let getInstanceDeclaration = (__x__ => ((__x__) => {
     if (__x__.__constructor === "InstanceDefinition" && true && true) {
       let decl = __x__.__args[0];
       return decl;
@@ -2202,7 +1996,7 @@
       return "";
     }
   })(__x__));
-  let getInstanceConstraints = __curry__((__x__) => ((__x__) => {
+  let getInstanceConstraints = (__x__ => ((__x__) => {
     if (__x__.__constructor === "InstanceDefinition" && true && true) {
       let constraints = __x__.__args[1];
       return constraints;
@@ -2211,22 +2005,23 @@
       return "";
     }
   })(__x__));
-  let handleInput = __curry__((state, event) => ((__x__) => {
+  let handleInput = (state => event => ((__x__) => {
     if (__x__.__constructor === "InputEvent" && true) {
       let e = __x__.__args[0];
       return ([Monad.Wish.of(always(({ ...state, search: e.target.value })))]);
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(event));
-  let DocApp = __curry__((state) => {
+  let DocApp = (state => {
       let filteredItems = state.docItems.filter((s) => getDocItemName(s).match(state.search));
-      return div(([className("documentation")]), ([header(([className("documentation__header")]), ([input(([inputType("text"), placeholder("What are you looking for?"), className("search-field"), onInput(handleInput)]), ([]))])), main(([className("documentation__content")]), ([DocItemList(filteredItems)]))]));
+      return div(([className("documentation")]))(([header(([className("documentation__header")]))(([input(([inputType("text"), placeholder("What are you looking for?"), className("search-field"), onInput(handleInput)]))(([]))])), main(([className("documentation__content")]))(([DocItemList(filteredItems)]))]));
   });
-  let DocItemList = __curry__((docItems) => ul(([]), ([ ...Functor.List.map(DocItem, docItems)])));
-  let DocItem = __curry__((docItem) => ((__x__) => {
+  let DocItemList = (docItems => ul(([]))(([ ...Functor.List.map(DocItem)(docItems)])));
+  let DocItem = (docItem => ((__x__) => {
     if (__x__.__constructor === "ExpressionItem" && true && true) {
       return ExpressionItemView(docItem);
     }
@@ -2244,10 +2039,11 @@
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(docItem));
-  let ExpressionItemView = __curry__((docItem) => {
+  let ExpressionItemView = (docItem => {
       let moduleName = ((__x__) => {
     if (__x__.__constructor === "ExpressionItem" && true && true) {
       let n = __x__.__args[0];
@@ -2255,6 +2051,7 @@
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(docItem);
@@ -2265,13 +2062,14 @@
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(docItem);
-      let descriptionParagraphs = __curry__((_P_) => Functor.List.map(__curry__((desc) => p(([]), ([desc]))))(lines(getDefDescription(_P_))))(definition);
-      return li(([className("definition")]), ([div(([className("definition__etiquette")]), ([text(`Function`)])), h2(([className("definition__title")]), ([span(([]), ([text(`${getDefName(definition)}`)])), span(([className("definition__module")]), ([text(moduleName)]))])), p(([]), ([span(([className("definition__type")]), ([text(getDefType(definition))]))])), p(([className("definition__since")]), ([text("Added in v"), text(getDefSince(definition))])), div(([className("definition__description")]), ([ ...descriptionParagraphs])), p(([className((__eq__(getDefExample(definition), "") ? "" : "definition__example"))]), ([Example(getDefExample(definition))]))]));
+      let descriptionParagraphs = (_P_ => Functor.List.map((desc => p(([]))(([desc]))))(lines(getDefDescription(_P_))))(definition);
+      return li(([className("definition")]))(([div(([className("definition__etiquette")]))(([text(`Function`)])), h2(([className("definition__title")]))(([span(([]))(([text(`${getDefName(definition)}`)])), span(([className("definition__module")]))(([text(moduleName)]))])), p(([]))(([span(([className("definition__type")]))(([text(getDefType(definition))]))])), p(([className("definition__since")]))(([text("Added in v"), text(getDefSince(definition))])), div(([className("definition__description")]))(([ ...descriptionParagraphs])), p(([className((__eq__(getDefExample(definition), "") ? "" : "definition__example"))]))(([Example(getDefExample(definition))]))]));
   });
-  let AliasItemView = __curry__((docItem) => {
+  let AliasItemView = (docItem => {
       let moduleName = ((__x__) => {
     if (__x__.__constructor === "AliasItem" && true && true) {
       let n = __x__.__args[0];
@@ -2279,6 +2077,7 @@
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(docItem);
@@ -2289,13 +2088,14 @@
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(docItem);
       let aliasedType = getAliasType(aliasDef);
-      return li(([className("definition")]), ([div(([className("definition__etiquette")]), ([text("Alias")])), h2(([className("definition__title")]), ([span(([]), ([text(getAliasName(aliasDef))])), span(([className("definition__module")]), ([text(moduleName)]))])), div(([className("definition__adt")]), ([span(([className("highlight")]), ([text("alias")])), span(([]), ([text(" "), text(getAliasName(aliasDef)), text(getAliasParams(aliasDef))])), span(([className("definition__constructors")]), ([span(([className("definition__constructor")]), ([span(([className("highlight")]), ([text(" = ")])), span(([]), ([text(aliasedType)]))]))]))]))]));
+      return li(([className("definition")]))(([div(([className("definition__etiquette")]))(([text("Alias")])), h2(([className("definition__title")]))(([span(([]))(([text(getAliasName(aliasDef))])), span(([className("definition__module")]))(([text(moduleName)]))])), div(([className("definition__adt")]))(([span(([className("highlight")]))(([text("alias")])), span(([]))(([text(" "), text(getAliasName(aliasDef)), text(getAliasParams(aliasDef))])), span(([className("definition__constructors")]))(([span(([className("definition__constructor")]))(([span(([className("highlight")]))(([text(" = ")])), span(([]))(([text(aliasedType)]))]))]))]))]));
   });
-  let InterfaceItemView = __curry__((docItem) => {
+  let InterfaceItemView = (docItem => {
       let moduleName = ((__x__) => {
     if (__x__.__constructor === "InterfaceItem" && true && true) {
       let n = __x__.__args[0];
@@ -2303,6 +2103,7 @@
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(docItem);
@@ -2313,15 +2114,16 @@
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(docItem);
       let methods = getInterfaceMethods(interfaceDef);
       let constraints = getInterfaceConstraints(interfaceDef);
-      let constraintElements = (!__eq__(constraints, "") ? ([span(([]), ([text(constraints)])), span(([className("highlight")]), ([text(` => `)]))]) : ([]));
-      return li(([className("definition")]), ([div(([className("definition__etiquette")]), ([text("Interface")])), h2(([className("definition__title")]), ([span(([]), ([text(getInterfaceName(interfaceDef))])), span(([className("definition__module")]), ([text(moduleName)]))])), div(([className("definition__interface")]), ([span(([className("highlight")]), ([text("interface ")])), span(([]), ([ ...constraintElements])), span(([]), ([text(getInterfaceName(interfaceDef)), text(" "), text(getInterfaceVars(interfaceDef))])), span(([className("highlight")]), ([text(` {`)])), div(([]), ([ ...Functor.List.map(__curry__((method) => div(([]), ([text("  "), method]))), methods)])), span(([className("highlight")]), ([text(`}`)]))]))]));
+      let constraintElements = (!__eq__(constraints, "") ? ([span(([]))(([text(constraints)])), span(([className("highlight")]))(([text(` => `)]))]) : ([]));
+      return li(([className("definition")]))(([div(([className("definition__etiquette")]))(([text("Interface")])), h2(([className("definition__title")]))(([span(([]))(([text(getInterfaceName(interfaceDef))])), span(([className("definition__module")]))(([text(moduleName)]))])), div(([className("definition__interface")]))(([span(([className("highlight")]))(([text("interface ")])), span(([]))(([ ...constraintElements])), span(([]))(([text(getInterfaceName(interfaceDef)), text(" "), text(getInterfaceVars(interfaceDef))])), span(([className("highlight")]))(([text(` {`)])), div(([]))(([ ...Functor.List.map((method => div(([]))(([text("  "), method]))))(methods)])), span(([className("highlight")]))(([text(`}`)]))]))]));
   });
-  let InstanceItemView = __curry__((docItem) => {
+  let InstanceItemView = (docItem => {
       let moduleName = ((__x__) => {
     if (__x__.__constructor === "InstanceItem" && true && true) {
       let n = __x__.__args[0];
@@ -2329,6 +2131,7 @@
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(docItem);
@@ -2339,14 +2142,15 @@
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(docItem);
       let constraints = getInstanceConstraints(instanceDef);
-      let constraintElements = (!__eq__(constraints, "") ? ([span(([]), ([text(constraints)])), span(([className("highlight")]), ([text(` => `)]))]) : ([]));
-      return li(([className("definition")]), ([div(([className("definition__etiquette")]), ([text("Instance")])), h2(([className("definition__title")]), ([span(([]), ([text(getInstanceDeclaration(instanceDef))])), span(([className("definition__module")]), ([text(moduleName)]))])), div(([className("definition__interface")]), ([span(([className("highlight")]), ([text("instance ")])), span(([]), ([ ...constraintElements])), span(([]), ([text(getInstanceDeclaration(instanceDef))]))]))]));
+      let constraintElements = (!__eq__(constraints, "") ? ([span(([]))(([text(constraints)])), span(([className("highlight")]))(([text(` => `)]))]) : ([]));
+      return li(([className("definition")]))(([div(([className("definition__etiquette")]))(([text("Instance")])), h2(([className("definition__title")]))(([span(([]))(([text(getInstanceDeclaration(instanceDef))])), span(([className("definition__module")]))(([text(moduleName)]))])), div(([className("definition__interface")]))(([span(([className("highlight")]))(([text("instance ")])), span(([]))(([ ...constraintElements])), span(([]))(([text(getInstanceDeclaration(instanceDef))]))]))]));
   });
-  let TypeItemView = __curry__((docItem) => {
+  let TypeItemView = (docItem => {
       let moduleName = ((__x__) => {
     if (__x__.__constructor === "TypeItem" && true && true) {
       let n = __x__.__args[0];
@@ -2354,6 +2158,7 @@
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(docItem);
@@ -2364,37 +2169,39 @@
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(docItem);
       let constructors = getTypeDefConstructors(typeDefinition);
       let manyCtors = len$1(constructors) > 1;
-      let renderedConstructors = (manyCtors ? ConstructorsView("=", constructors) : ([span(([className("definition__constructor")]), ([span(([className("highlight")]), ([text("= ")])), span(([]), ([text(fromMaybe("???", first(constructors)))]))]))]));
-      return li(([className("definition")]), ([div(([className("definition__etiquette")]), ([text("Type")])), h2(([className("definition__title")]), ([span(([]), ([text(getTypeDefName(typeDefinition))])), span(([className("definition__module")]), ([text(moduleName)]))])), div(([className("definition__adt")]), ([span(([className("highlight")]), ([text("type")])), span(([]), ([text(" "), text(getTypeDefName(typeDefinition)), text(" "), text(getTypeDefParams(typeDefinition))])), span(([className("definition__constructors")]), ([ ...renderedConstructors]))]))]));
+      let renderedConstructors = (manyCtors ? ConstructorsView("=")(constructors) : ([span(([className("definition__constructor")]))(([span(([className("highlight")]))(([text("= ")])), span(([]))(([text(fromMaybe("???")(first(constructors)))]))]))]));
+      return li(([className("definition")]))(([div(([className("definition__etiquette")]))(([text("Type")])), h2(([className("definition__title")]))(([span(([]))(([text(getTypeDefName(typeDefinition))])), span(([className("definition__module")]))(([text(moduleName)]))])), div(([className("definition__adt")]))(([span(([className("highlight")]))(([text("type")])), span(([]))(([text(" "), text(getTypeDefName(typeDefinition)), text(" "), text(getTypeDefParams(typeDefinition))])), span(([className("definition__constructors")]))(([ ...renderedConstructors]))]))]));
   });
-  let ConstructorsView = __curry__((separator, items) => ((__x__) => {
+  let ConstructorsView = (separator => items => ((__x__) => {
     if (__x__.length >= 2 && true && true) {
       let [ctor,...more] = __x__;
-      return ([ConstructorView(separator, ctor),  ...ConstructorsView("|", more)]);
+      return ([ConstructorView(separator)(ctor),  ...ConstructorsView("|")(more)]);
     }
     else if (__x__.length === 1 && true) {
       let [ctor] = __x__;
-      return ([ConstructorView(separator, ctor)]);
+      return ([ConstructorView(separator)(ctor)]);
     }
     else if (__x__.length === 0) {
       return ([]);
     }
     else {
       console.log('non exhaustive patterns for value: ', __x__.toString()); 
+      console.trace(); 
       throw 'non exhaustive patterns!';
     }
   })(items));
-  let ConstructorView = __curry__((separator, constructor) => div(([className("definition__constructor")]), ([span(([className("highlight")]), ([text("  "), separator])), span(([]), ([text(" "), constructor]))])));
-  let Example = __curry__((example) => {
-      let lineList = split("\n", example);
-      return div(([]), ([ ...Functor.List.map(__curry__((l) => div(([className("example__line")]), ([l]))), lineList)]));
+  let ConstructorView = (separator => constructor => div(([className("definition__constructor")]))(([span(([className("highlight")]))(([text("  "), separator])), span(([]))(([text(" "), constructor]))])));
+  let Example = (example => {
+      let lineList = split("\n")(example);
+      return div(([]))(([ ...Functor.List.map((l => div(([className("example__line")]))(([l]))))(lineList)]));
   });
-  render(DocApp, initialState, "app");
+  render(DocApp)(initialState)("app");
   var Main = { parser };
 
   exports.default = Main;
