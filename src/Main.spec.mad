@@ -1,11 +1,10 @@
 import { assertEquals, test } from "TestTools"
 import { Left, Right } from "Either"
-import { Just, Nothing } from "Maybe"
 import { isDigit, repeat, split } from "String"
 import { apL } from "Applicative"
-import { maybeLoop } from "Control"
 
-import { anyChar, char, choice, location, many, manyTill, notOneOf, oneOf, runParser, some, takeWhile, Error, Location, Loc } from "./Main"
+import type { Location } from "./Main"
+import { anyChar, char, choice, location, many, manyTill, notOneOf, oneOf, runParser, some, takeWhile, Error, Loc } from "./Main"
 
 test("it should parse any character", (_) => {
   input = "c"
@@ -113,8 +112,9 @@ test("manyTill should produce a parse until the end parser matches", (_) => {
 })
 
 test("manyTill should not exceed stack limit with big inputs", (_) => {
+  ones = repeat(100000, "1")
   input = repeat(100000, "1") ++ "-"
-  expected = Right(split("", input))
+  expected = Right(split("", ones))
   actual = runParser(apL(manyTill(anyChar, char("-")), char("-")), input)
   return assertEquals(actual, expected)
 })

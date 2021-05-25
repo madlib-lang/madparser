@@ -2,6 +2,7 @@
   "name": "madparser",
   "version": "0.0.1",
   "main": "src/Main.mad",
+  "madlibVersion": "0.9.0",
   "dependencies": {
     "MadDocCli": "https://github.com/madlib-lang/maddoc-cli/archive/refs/heads/master.zip"
   }
