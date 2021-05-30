@@ -3,8 +3,22 @@ import { Left, Right } from "Either"
 import { isDigit, repeat, split } from "String"
 import { apL } from "Applicative"
 
-import type { Location } from "./Main"
-import { anyChar, char, choice, location, many, manyTill, notOneOf, oneOf, runParser, some, takeWhile, Error, Loc } from "./Main"
+import type { Location } from "@/Main"
+import {
+  anyChar,
+  char,
+  choice,
+  location,
+  many,
+  manyTill,
+  notOneOf,
+  oneOf,
+  runParser,
+  some,
+  takeWhile,
+  Error,
+  Loc
+} from "@/Main"
 
 test("it should parse any character", (_) => {
   input = "c"
