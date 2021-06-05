@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "maddoc": "file:madlib_modules/https___github_com_madlib_lang_maddoc_archive_refs_heads_master_zip",
+    "maddoc-cli": "file:madlib_modules/https___github_com_madlib_lang_maddoc_cli_archive_refs_heads_master_zip",
+    "madui": "file:madlib_modules/https___github_com_madlib_lang_madui_archive_refs_heads_master_zip"
+  }
+}

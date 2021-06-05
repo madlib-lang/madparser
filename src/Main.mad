@@ -1,7 +1,7 @@
 import {} from "Monad"
 import {} from "Alternative"
 import { apL } from "Applicative"
-import type { Either } from "Either"
+import { Either } from "Either"
 import { Right, Left } from "Either"
 import { Just, Nothing } from "Maybe"
 import { firstChar, drop, isDigit, isLetter } from "String"
