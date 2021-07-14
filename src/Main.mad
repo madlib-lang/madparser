@@ -10,22 +10,25 @@ import { always, complement, equals, ifElse, notEquals } from "Function"
 import {} from "Number"
 import { maybeLoop } from "Control"
 
-export type Location = Loc Number Number Number
+export type Location = Loc(Number, Number, Number)
+
+type Parser a = Parser (String -> Location -> <List <a, String>, Location>)
+export type Parser
+
+export type Error = Error(Location)
 
 incLoc :: String -> Location -> Location
-incLoc = (c) => where is Loc abs line col: c == "\n"
-  ? Loc(abs + 1, line + 1, 0)
-  : Loc(abs + 1, line, col + 1)
-
-export type Parser a = Parser (String -> Location -> <List <a, String>, Location>)
-
-export type Error = Error Location
+incLoc = (c) => where { 
+  Loc(abs, line, col) => c == "\n"
+    ? Loc(abs + 1, line + 1, 0)
+    : Loc(abs + 1, line, col + 1)
+}
 
 parse :: Parser a -> String -> Location -> <List <a, String>, Location>
-parse = (parser, input, loc) => where(parser) is Parser fn: fn(input, loc)
+parse = (parser, input, loc) => where(parser) { Parser(fn) => fn(input, loc) }
 
 /**
- * Runs a given parser with a given input. If it is successful it returns a Right
+ * Runs a given parser with a given input. If it successful it returns a Right
  * of the parsed type, otherwise it returns an error with the location of where
  * it failed.
  *
@@ -34,10 +37,11 @@ parse = (parser, input, loc) => where(parser) is Parser fn: fn(input, loc)
  * runParser(anyChar, "a")
  */
 runParser :: Parser a -> String -> Either Error a
-export runParser = (m, s) => where(parse(m, s, Loc(0, 0, 0)))
-  is <[<res, "">], _>: Right(res)
-  is <[<_, rest>], l>: Left(Error(l))
-  is <_, l>          : Left(Error(l))
+export runParser = (m, s) => where(parse(m, s, Loc(0, 0, 0))) {
+  <[<res, "">], _> => Right(res)
+  <[<_, rest>], l> => Left(Error(l))
+  <_, l> => Left(Error(l))
+}
 
 /**
  * maps the contained value of a Parser.
@@ -48,14 +52,14 @@ export runParser = (m, s) => where(parse(m, s, Loc(0, 0, 0)))
  * map(Letter, anyChar) // Parser Letter
  */
 instance Functor Parser {
-  map = (f, m) => Parser((s, l) => where(parse(m, s, l))
-    is <[<a, b>], loc>: <[<f(a), b>], loc>
-    is <[], loc>      : <[], loc>
-  )
+  map = (f, m) => Parser((s, l) => where(parse(m, s, l)) {
+    <[<a, b>], loc> => <[<f(a), b>], loc>
+    <[], loc> => <[], loc>
+  })
 }
 
 /**
- * This is the heart of how parser combinators work. With ap you can apply many
+ * This the heart of how parser combinators work. With ap you can apply many
  * arguments to a mapping function.
  *
  * @since 0.0.1
@@ -71,10 +75,10 @@ instance Applicative Parser {
 
   ap = (parserA, parserB) => Parser((s, l) =>
     where(parse(parserA, s, l)) {
-      is <[], l1>       : <[], l1>
-      is <[<f, s1>], l1>: where(parse(parserB, s1, l1)) {
-        is <[<a, s2>], l2>: <[<f(a), s2>], l2>
-        is <[], l2>       : <[], l2>
+      <[], l1> => <[], l1>
+      <[<f, s1>], l1> => where(parse(parserB, s1, l1)) {
+        <[<a, s2>], l2> => <[<f(a), s2>], l2>
+        <[], l2> => <[], l2>
       }
     }
   )
@@ -90,9 +94,10 @@ instance Monad Parser {
   of = pure
 
   chain = (f, m) => Parser((s, l) =>
-    where(parse(m, s, l))
-      is <[], ll>       : <[], ll>
-      is <[<a, s1>], l1>: parse(f(a), s1, l1)
+    where(parse(m, s, l)) {
+      <[], ll> => <[], ll>
+      <[<a, s1>], l1> => parse(f(a), s1, l1)
+    }
   )
 }
 
@@ -108,9 +113,10 @@ instance Alternative Parser {
   empty = Parser((_, l) => <[], l>)
 
   alt = (ma, mb) => Parser((s, l) =>
-    where(parse(ma, s, l))
-      is <[], _> : parse(mb, s, l)
-      is res     : res
+    where(parse(ma, s, l)) {
+      <[], _> => parse(mb, s, l)
+      res => res
+    }
   )
 }
 
@@ -225,7 +231,7 @@ export many = (p) => Parser((s, l) => #-{
 
 /**
  * A parser combinator that applies 1 or more times the given parser. If no parse
- * is found at all it'll fail.
+ * found at all it'll fail.
  *
  * @since 0.0.1
  * @example
@@ -255,18 +261,25 @@ export some = (p) => chain(
 manyTill :: Parser a -> Parser b -> Parser (List a)
 export manyTill = (p, end) => Parser((s, l) => {
   result = maybeLoop(<s, l, []>, (state) =>
-    where(state)
-      is <ss, ll, acc>:
-        where(parse(end, ss, ll))
-          is <[<_, _>], _>: Nothing
-          is _            :
-            where(parse(p, ss, ll))
-              is <[<parsed, rest>], loc>:
+    where(state) {
+      <ss, ll, acc> =>
+        where(parse(end, ss, ll)) {
+          <[<_, _>], _> =>
+            Nothing
+
+          _ =>
+            where(parse(p, ss, ll)) {
+              <[<parsed, rest>], loc> =>
                 Just(<rest, loc, #- acc.push(parsed) && acc-#>)
-              is _: Nothing
+
+                _ =>
+                Nothing
+            }
+        }
+    }
   )
 
-  return where(result) is <rest, loc, parseResult>: <[<parseResult, rest>], loc>
+  return where(result) { <rest, loc, parseResult> => <[<parseResult, rest>], loc> }
 })
 
 /**
@@ -300,10 +313,10 @@ export someTill = (p, end) => chain(
  * alt(char("a"), lookAhead(anyChar))
  */
 lookAhead :: Parser a -> Parser a
-export lookAhead = (p) => Parser((s, l) => where(parse(p, s, l))
-  is <[<a, _>], _>: <[<a, s>], l>
-  is _            : <[], l>
-)
+export lookAhead = (p) => Parser((s, l) => where(parse(p, s, l)) {
+  <[<a, _>], _> => <[<a, s>], l>
+  _ => <[], l>
+})
 
 /**
  * A parser combinator that parses all characters while the given predicate
@@ -316,16 +329,21 @@ export lookAhead = (p) => Parser((s, l) => where(parse(p, s, l))
 takeWhile :: (String -> Boolean) -> Parser String
 export takeWhile = (pred) => Parser((s, l) => {
   result = maybeLoop(<s, l, "">, (state) =>
-    where(state)
-      is <ss, ll, acc>:
-        where(parse(anyChar, ss, ll))
-          is <[<parsed, rest>], loc>: pred(parsed)
-            ? Just(<rest, loc, acc ++ parsed>)
-            : Nothing
-          is _: Nothing
+    where(state) {
+      <ss, ll, acc> =>
+        where(parse(anyChar, ss, ll)) {
+          <[<parsed, rest>], loc> =>
+            pred(parsed)
+              ? Just(<rest, loc, acc ++ parsed>)
+              : Nothing
+
+          _ =>
+            Nothing
+        }
+    }
   )
 
-  return where(result) is <rest, loc, parseResult>: <[<parseResult, rest>], loc>
+  return where(result) { <rest, loc, parseResult> => <[<parseResult, rest>], loc> }
 })
 
 /**
@@ -354,7 +372,7 @@ char :: String -> Parser String
 export char = pipe(equals, satisfy)
 
 /**
- * The complement of char, it parses any char that is not the one given.
+ * The complement of char, it parses any char that not the one given.
  *
  * @since 0.0.1
  * @example
@@ -373,10 +391,10 @@ export notChar = pipe(notEquals, satisfy)
  * runParser(eof, "a") // Left (Loc 0 0 0)
  */
 eof :: Parser ()
-export eof = Parser((s, l) => where(parse(anyChar, s, l))
-  is <[], _>: <[<(), "">], l>
-  is _ : <[], l>
-)
+export eof = Parser((s, l) => where(parse(anyChar, s, l)) {
+  <[], _> => <[<(), "">], l>
+  _ => <[], l>
+})
 
 /**
  * A parser combinator that parses a given string.
@@ -387,13 +405,16 @@ export eof = Parser((s, l) => where(parse(anyChar, s, l))
  * runParser(string("hello world"), "hello")       // Left (Loc 0 0 0)
  */
 string :: String -> Parser String
-export string = (s) => where(firstChar(s))
-  is Just c :
+export string = (s) => where(firstChar(s)){
+  Just(c) =>
     pipe(
       map((a, b) => a ++ b),
       ap($, string(drop(1, s)))
     )(char(c))
-  is Nothing: pure("")
+
+  Nothing =>
+    pure("")
+}
 
 /**
  * A parser combinator that parses empty characters such as spaces, line returns
