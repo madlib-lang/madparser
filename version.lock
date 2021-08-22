@@ -1,0 +1,50 @@
+{
+  "buildHash": "01dd02f8a9d182e3d57130a687aa70a8",
+  "versionHash": "7417b617700b295682ee25ac611b0db6",
+  "api": {
+    "apiNames": {
+      "digit": "Parser String",
+      "location": "Parser Location",
+      "string": "String -> Parser String",
+      "notOneOf": "List String -> Parser String",
+      "token": "Parser a -> Parser a",
+      "manyTill": "Parser a -> Parser b -> Parser (List a)",
+      "symbol": "String -> Parser String",
+      "anyChar": "Parser String",
+      "runParser": "Parser a -> String -> Either Error a",
+      "some": "Parser a -> Parser (List a)",
+      "eof": "Parser ()",
+      "takeWhile": "(String -> Boolean) -> Parser String",
+      "spaces": "Parser String",
+      "letters": "Parser String",
+      "oneOf": "List String -> Parser String",
+      "notChar": "String -> Parser String",
+      "char": "String -> Parser String",
+      "many": "Parser a -> Parser (List a)",
+      "satisfy": "(String -> Boolean) -> Parser String",
+      "choice": "List (Parser a) -> Parser a",
+      "letter": "Parser String",
+      "lookAhead": "Parser a -> Parser a",
+      "someTill": "Parser a -> Parser b -> Parser (List a)"
+    },
+    "apiInstances": [
+      "Alternative Parser",
+      "Monad Parser",
+      "Applicative Parser",
+      "Functor Parser"
+    ],
+    "apiAliases": {},
+    "apiTypes": {
+      "Location": [
+        "Loc Number Number Number"
+      ],
+      "Error": [
+        "Error Location"
+      ],
+      "Parser a": [
+        "Parser (String -> Location -> <List <a, String>, Location>)"
+      ]
+    },
+    "apiInterfaces": {}
+  }
+}

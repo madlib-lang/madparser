@@ -43,7 +43,7 @@ test("it should parse specific characters", (_) => {
 })
 
 
-type Letter = L Location Location String
+type Letter = L(Location, Location, String)
 
 test("location combinator should give access to current location info", (_) => {
   input = "cba"
