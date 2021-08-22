@@ -8,3 +8,5 @@ build
 madlib_modules
 node_modules
 src/Test.mad
+.module_cache
+
