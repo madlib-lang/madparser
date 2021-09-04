@@ -1,14 +1,17 @@
+import type { Either } from "Either"
+
 import {} from "Monad"
 import {} from "Alternative"
+import {} from "Number"
 import { apL } from "Applicative"
-import type { Either } from "Either"
 import { Right, Left } from "Either"
 import { Just, Nothing } from "Maybe"
 import { firstChar, drop, isDigit, isLetter } from "String"
 import { includes, reduce } from "List"
 import { always, complement, equals, ifElse, notEquals } from "Function"
-import {} from "Number"
 import { maybeLoop } from "Control"
+
+
 
 export type Location = Loc(Number, Number, Number)
 

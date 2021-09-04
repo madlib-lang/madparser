@@ -1,16 +1,16 @@
 {
   "name": "MadParser",
-  "version": "0.0.5",
-  "madlibVersion": "0.10.0",
+  "version": "0.0.6",
+  "madlibVersion": "0.11.0",
   "main": "src/Main.mad",
   "importAliases": {
     ".": "src"
   },
   "dependencies": [
     {
-      "minVersion": "0.0.4",
-      "url": "https://github.com/madlib-lang/maddoc-cli/archive/refs/tags/v0.0.4.zip",
-      "description": "maddoc cli - used to generate the documentation for the project"
+      "minVersion": "0.0.5",
+      "url": "https://github.com/madlib-lang/maddoc-cli/archive/refs/tags/v0.0.5.zip",
+      "description": "MadDocCli - used to generate the documentation for the project"
     }
   ]
 }
