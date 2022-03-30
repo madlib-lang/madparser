@@ -1,3 +1,7 @@
+# IMPORTANT NOTE:
+This project is now archived as it's been ported to the standard library of Madlib and can be found here: https://github.com/madlib-lang/madlib/blob/master/prelude/__internal__/Parse.mad
+
+
 # madparser
 [![build](https://github.com/madlib-lang/madparser/actions/workflows/build.yml/badge.svg)](https://github.com/madlib-lang/madparser/actions/workflows/build.yml)
 [![Coverage Status](https://coveralls.io/repos/github/madlib-lang/madparser/badge.svg?branch=master)](https://coveralls.io/github/madlib-lang/madparser?branch=master)
